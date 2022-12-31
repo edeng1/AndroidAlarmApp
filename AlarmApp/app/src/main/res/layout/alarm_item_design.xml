@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="95dp"
+        android:background="#ffffff">
+
+        <TextView
+            android:id="@+id/timeText"
+            android:layout_width="50dp"
+            android:layout_height="30dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="40dp"
+            android:fontFamily="sans-serif-thin"
+            android:scaleType="centerCrop"
+            android:text="9:00"
+            android:textStyle="bold"
+            android:textSize="25dp"
+
+            >
+
+        </TextView>
+
+        <TextView
+            android:id="@+id/meridianText"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+
+            android:layout_marginLeft="7dp"
+            android:layout_marginTop="53dp"
+            android:layout_toRightOf="@+id/timeText"
+            android:fontFamily="sans-serif-thin"
+            android:text="AM"
+            android:textSize="15dp"
+            android:textStyle="bold">
+
+        </TextView>
+
+        <TextView
+            android:id="@+id/dateText"
+            android:layout_width="65dp"
+            android:layout_height="20dp"
+
+            android:layout_marginLeft="295dp"
+            android:layout_marginTop="47dp"
+            android:layout_marginRight="10dp"
+
+            android:text="Fri, Dec 30"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-thin"
+            android:textSize="13dp">
+
+        </TextView>
+
+        <Switch
+            android:id="@+id/alarmSwitch"
+            android:layout_width="65dp"
+            android:layout_height="10dp"
+            android:layout_alignTop="@+id/dateText"
+            android:layout_alignBottom="@+id/dateText"
+
+            android:layout_marginLeft="-4dp"
+            android:layout_marginTop="-6dp"
+            android:layout_marginBottom="-3dp"
+            android:layout_toRightOf="@+id/dateText"
+            android:scaleX="1"
+            android:scaleY="1"
+            android:text="" />
+
+
+    </RelativeLayout>
+
+
+
+
+</RelativeLayout>
