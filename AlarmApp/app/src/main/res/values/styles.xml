@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="CustomTimePickerStyle" parent="@android:style/Widget.Material.Light.TimePicker">
+        <!-- Customize the colors as per your requirement -->
+        <item name="android:numbersTextColor">#FF0000</item> <!-- Hour and minute numbers color -->
+        <item name="android:numbersBackgroundColor">#FFFFFF</item> <!-- Background color of numbers -->
+        <item name="android:numbersSelectorColor">#00FF00</item> <!-- Color of the number selector -->
+    </style>
+</resources>
