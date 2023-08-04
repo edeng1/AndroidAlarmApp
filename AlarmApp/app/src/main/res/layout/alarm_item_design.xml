@@ -1,25 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+
+    android:visibility="visible">
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="95dp"
-        android:background="#ffffff">
+
+        android:layout_marginTop="5dp"
+        android:background="#E9DCC9">
 
         <TextView
             android:id="@+id/timeText"
-            android:layout_width="50dp"
-            android:layout_height="30dp"
+            android:layout_width="64dp"
+            android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:layout_marginTop="40dp"
             android:fontFamily="sans-serif-thin"
             android:scaleType="centerCrop"
-            android:text="9:00"
-            android:textStyle="bold"
-            android:textSize="25dp"
+            android:text="09:00"
 
-            >
+            android:textSize="25dp"
+            android:textStyle="bold">
 
         </TextView>
 
@@ -28,7 +33,7 @@
             android:layout_width="25dp"
             android:layout_height="25dp"
 
-            android:layout_marginLeft="7dp"
+            android:layout_marginLeft="10dp"
             android:layout_marginTop="53dp"
             android:layout_toRightOf="@+id/timeText"
             android:fontFamily="sans-serif-thin"
@@ -40,17 +45,17 @@
 
         <TextView
             android:id="@+id/dateText"
-            android:layout_width="65dp"
-            android:layout_height="20dp"
+            android:layout_width="70dp"
+            android:layout_height="wrap_content"
 
-            android:layout_marginLeft="295dp"
+            android:layout_marginLeft="265dp"
             android:layout_marginTop="47dp"
-            android:layout_marginRight="10dp"
+            android:layout_marginRight="30dp"
 
-            android:text="Fri, Dec 30"
-            android:textStyle="bold"
             android:fontFamily="sans-serif-thin"
-            android:textSize="13dp">
+            android:text="Fri, Dec 30"
+            android:textSize="13dp"
+            android:textStyle="bold">
 
         </TextView>
 
@@ -69,10 +74,30 @@
             android:scaleY="1"
             android:text="" />
 
+        <ImageView
+            android:id="@+id/deleteTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@id/alarmSwitch"
+            android:layout_marginTop="50dp"
+            android:layout_marginBottom="54dp"
+            android:scaleType="center"
+            android:scaleX="2"
+            android:scaleY="2"
+            android:visibility="invisible"
+            app:srcCompat="@android:drawable/presence_busy" />
+
+        <ImageButton
+            android:id="@+id/deleteButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignStart="@id/alarmSwitch"
+            android:layout_marginTop="40dp"
+            android:visibility="invisible"
+            app:srcCompat="@android:drawable/presence_busy" />
+
 
     </RelativeLayout>
-
-
 
 
 </RelativeLayout>

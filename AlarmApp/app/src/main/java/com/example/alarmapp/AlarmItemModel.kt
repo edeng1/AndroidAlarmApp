@@ -2,12 +2,12 @@ package com.example.alarmapp
 
 
 data class AlarmItemModel(
-    var alarmTime:Int,
+    var alarmTime:String,
     var meridian:String,
-    var alarmDate:Int,
+    var alarmDate:String,
+    var alarmId:Int,
+    var alarmToggle:Int,
+    )
 
-    ) {
 
 
-
-}
