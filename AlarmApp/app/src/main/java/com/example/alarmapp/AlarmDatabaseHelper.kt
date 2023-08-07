@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import java.util.*
 
 class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -107,11 +108,12 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
 
 
 
-    fun updateData(id: Int,time: Long, toggle: Int){
+    fun updateData(id: Int,time: Long, toggle: Int):Long{
+        val newTime = isTimeBeforeCurrentTime(time)
         val db = this.writableDatabase
         val values = ContentValues().apply {
             put("_id",id )
-            put("time", time)
+            put("time", newTime)
             put("toggle",toggle)
 
         }
@@ -120,7 +122,22 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
         val selectionArgs = arrayOf(id.toString()) // Replace "1" with the ID of the item you want to update
 
         // Update the item in the database
-        val rowsUpdated = db.update("alarm", values, selection, selectionArgs)
+        db.update("alarm", values, selection, selectionArgs)
+        return newTime
+    }
+
+    fun isTimeBeforeCurrentTime(time: Long): Long{
+        val calendar = Calendar.getInstance()
+        var newTime=time
+        val currentTime= Calendar.getInstance().timeInMillis
+        // Check if the selected time is in the past
+        while (newTime <= currentTime) {
+            // Add one day to the selected time
+            calendar.timeInMillis=newTime
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+            newTime=calendar.timeInMillis
+        }
+        return newTime
     }
 
     fun clearDatabase(TABLE_NAME: String) {

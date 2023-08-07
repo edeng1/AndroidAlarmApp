@@ -13,6 +13,9 @@ import android.widget.ImageView
 import android.widget.Switch
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context: Context): RecyclerView.Adapter<MyAdapter.MyViewHolder>() {
     private var toggleVisibility = View.VISIBLE
@@ -82,6 +85,23 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
                     onRemoveClickListener.onRemoveClick(position)
                 }
             }
+
+        }
+
+        fun bindItem(item:AlarmItemModel,context: Context){
+            updateTimeDifference(item.alarmId,item.alarmToggle,item.alarmTimeInMillis,context)
+        }
+        //If current time passes alarm, it must update.
+        fun updateTimeDifference(id: Int,toggle: Int,timeInMillis: Long, context: Context  ) {
+            val db=AlarmDatabaseHelper.getInstance(context)
+            val currentTimeMillis = System.currentTimeMillis()
+            val timeDifference = timeInMillis - currentTimeMillis
+
+            if (timeDifference > 0) {
+
+            } else {
+                db.updateData(id,timeInMillis,toggle)
+            }
         }
 
     }
@@ -89,9 +109,17 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         val item = items[position]
         // Bind the data for the item to the view holder
-        holder.alarmTime.setText(item.alarmTime);
-        holder.alarmMeridian.text = item.meridian;
-        holder.alarmDate.setText(item.alarmDate);
+
+        //updates time if over currenttime
+        holder.bindItem(item,context)
+
+        val (timeString,meridian,date)=convertTimeInMillisToDate(item.alarmTimeInMillis)
+
+
+
+        holder.alarmTime.setText(timeString);
+        holder.alarmMeridian.text = meridian;
+        holder.alarmDate.setText(date);
 
         val switch=holder.alarmSwitch
         val remove= holder.alarmRemove
@@ -136,37 +164,22 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
             if(isChecked){
 
                 db.updateData(id,time,1)
-                am.setAlarm(id,time,pendingIntent,item.alarmTime)
-                notifyItemChanged(position)
+                am.setAlarm(id,time,pendingIntent,timeString)
+
             }else{
                 db.updateData(id,time,0)
-                am.cancelAlarm(pendingIntent, item.alarmTime)
+                am.cancelAlarm(pendingIntent, timeString)
             }
 
         }
 
+        //Remove
         holder.bind(item, object : OnRemoveClickListener {
             override fun onRemoveClick(position: Int) {
                 removeItem(position)
             }
+
         }, context)
-//        remove.setOnClickListener {
-//            val db=AlarmDatabaseHelper.getInstance(context)
-//            val am=AlarmManagerHelper.getInstance(context)
-//            db.removeAlarm(item.alarmId)
-//            val intent = Intent(context, AlarmReceiver::class.java)
-//            val pendingIntent = PendingIntent.getBroadcast(context, item.alarmId, intent, PendingIntent.FLAG_IMMUTABLE)
-//            am.cancelAlarm(pendingIntent)
-//
-//
-//            if (position != RecyclerView.NO_POSITION) {
-//                items.removeAt(position)
-//                notifyItemRemoved(position)
-//            }
-//
-//
-//
-//        }
 
 
     }
@@ -177,6 +190,42 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
     fun removeItem(position: Int) {
         items.removeAt(position)
         notifyItemRemoved(position)
+    }
+
+    fun convertTimeInMillisToDate(timeInMillis: Long) : Triple<out String, out String, out String>{
+
+
+        // Choose the desired date/time format
+        val dateFormat = "yyyy-MM-dd hh:mm a" // For example: "yyyy-MM-dd hh:mm a" or "dd MMM yyyy, hh:mm a"
+
+
+        // Create a SimpleDateFormat instance with the desired format and locale
+        val simpleDateFormat = SimpleDateFormat(dateFormat, Locale.getDefault())
+
+        // Convert timeInMillis to Date object
+        val date = Date(timeInMillis)
+
+        val dateTime=simpleDateFormat.format(date)
+
+        val parts = dateTime.split(" ")
+        var dateString=""
+        var time=""
+        var meridian= ""
+
+        if (parts.size >= 2) {
+            dateString = parts[0]
+            if(parts[1].get(0)=='0'){
+                time = parts[1].drop(1)
+            }
+            else{
+                time=parts[1]
+            }
+            meridian = parts[2]
+        }
+        return Triple(time,meridian,dateString)
+    }
+    fun resetViewHolder(){
+        notifyDataSetChanged()
     }
 
 

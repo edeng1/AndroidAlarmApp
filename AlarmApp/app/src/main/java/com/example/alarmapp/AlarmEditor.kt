@@ -1,5 +1,6 @@
 package com.example.alarmapp
 
+import AlarmManagerHelper
 import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -134,12 +135,11 @@ class AlarmEditor : AppCompatActivity() {
             //Editing already existing alarm
             else{
                 val id=intent.getIntExtra("key",alarmHelper.getAlarmCount())
-                alarmHelper.updateData(id,calendar.timeInMillis,1)
-
-                //TODO
-                //pending intent
+                val intent = Intent(this, AlarmReceiver::class.java)
+                intent.putExtra("key",id)
+                val pendingIntent = PendingIntent.getBroadcast(this, id, intent, FLAG_IMMUTABLE)
+                val am=AlarmManagerHelper.getInstance(this).setAlarm(id,calendar.timeInMillis,pendingIntent,"")
             }
-
 
             val intent2 = Intent(this, MainActivity::class.java)
             intent2.putExtra("key", "$hour:$minute");

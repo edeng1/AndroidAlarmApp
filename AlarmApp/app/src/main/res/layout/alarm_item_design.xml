@@ -10,8 +10,8 @@
         android:layout_width="match_parent"
         android:layout_height="95dp"
 
-        android:layout_marginTop="5dp"
-        android:background="#E9DCC9">
+        android:layout_marginTop="15dp"
+        android:background="@color/bluish_color">
 
         <TextView
             android:id="@+id/timeText"
@@ -21,8 +21,9 @@
             android:layout_marginTop="40dp"
             android:fontFamily="sans-serif-thin"
             android:scaleType="centerCrop"
+            android:textAlignment="textEnd"
             android:text="09:00"
-
+            android:textColor="@color/white"
             android:textSize="25dp"
             android:textStyle="bold">
 
@@ -32,12 +33,12 @@
             android:id="@+id/meridianText"
             android:layout_width="25dp"
             android:layout_height="25dp"
-
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="53dp"
+            android:layout_marginLeft="4dp"
+            android:layout_marginTop="50dp"
             android:layout_toRightOf="@+id/timeText"
             android:fontFamily="sans-serif-thin"
             android:text="AM"
+            android:textColor="@color/white"
             android:textSize="15dp"
             android:textStyle="bold">
 
@@ -47,13 +48,14 @@
             android:id="@+id/dateText"
             android:layout_width="70dp"
             android:layout_height="wrap_content"
-
-            android:layout_marginLeft="265dp"
+            android:textColor="@color/white"
+            android:textAlignment="viewEnd"
+            android:layout_marginLeft="245dp"
             android:layout_marginTop="47dp"
-            android:layout_marginRight="30dp"
+            android:layout_marginRight="25dp"
 
             android:fontFamily="sans-serif-thin"
-            android:text="Fri, Dec 30"
+            android:text="2023-08-07"
             android:textSize="13dp"
             android:textStyle="bold">
 
@@ -61,7 +63,7 @@
 
         <Switch
             android:id="@+id/alarmSwitch"
-            android:layout_width="65dp"
+            android:layout_width="wrap_content"
             android:layout_height="10dp"
             android:layout_alignTop="@+id/dateText"
             android:layout_alignBottom="@+id/dateText"

@@ -22,18 +22,13 @@ class AlarmManagerHelper private constructor(private val context: Context) {
     }
 
     fun setAlarm(alarmId: Int, triggerTime: Long, pendingIntent: PendingIntent, timeString: String) {
-        val calendar = Calendar.getInstance()
-        var newTime=triggerTime
-        val currentTime=Calendar.getInstance().timeInMillis
-        // Check if the sel ected time is in the past
-        while (newTime <= currentTime) {
-            // Add one day to the selected time
-            calendar.timeInMillis=newTime
-            calendar.add(Calendar.DAY_OF_YEAR, 1)
-            newTime=calendar.timeInMillis
-        }
+
+
         val db=AlarmDatabaseHelper.getInstance(context)
-        db.updateData(alarmId,newTime,1)
+        //Updates db but also checks if alarm is before current time, if so adds days to alarm
+        //until its over the current time, then returns new alarm time
+        val newTime = db.updateData(alarmId,triggerTime,1)
+
         getAlarmManager()?.let { am ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, newTime, pendingIntent)
@@ -42,7 +37,7 @@ class AlarmManagerHelper private constructor(private val context: Context) {
             } else {
                 am.set(AlarmManager.RTC_WAKEUP, newTime, pendingIntent)
             }
-
+            val calendar = Calendar.getInstance()
             calendar.timeInMillis=newTime
             val hour=Calendar.HOUR_OF_DAY
             val min=Calendar.MINUTE
@@ -50,9 +45,7 @@ class AlarmManagerHelper private constructor(private val context: Context) {
         }
     }
 
-    fun convertTimeInMillisToHourMin(millis: Long){
 
-    }
 
     fun cancelAlarm(pendingIntent: PendingIntent, timeString: String="") {
         getAlarmManager()?.cancel(pendingIntent)

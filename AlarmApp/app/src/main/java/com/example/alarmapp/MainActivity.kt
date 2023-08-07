@@ -1,5 +1,6 @@
 package com.example.alarmapp
 
+import AlarmManagerHelper
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -7,36 +8,49 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.TextView
 import androidx.appcompat.widget.Toolbar
-
+import com.google.android.material.appbar.CollapsingToolbarLayout
+import java.lang.Long.MAX_VALUE
+import java.util.*
+import kotlin.collections.ArrayList
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private lateinit var addAlarm: ImageButton
     private lateinit var removeAlarm: ImageButton
+    private lateinit var nextAlarmText: TextView
     private lateinit var alarmList: ArrayList<AlarmItemModel>;
     private lateinit var recyclerView: RecyclerView;
     private lateinit var toolbar: Toolbar;
+    private lateinit var collapsingToolbar: CollapsingToolbarLayout
     private lateinit var _adapter: MyAdapter;
     private var toggleVisible=View.VISIBLE
     private var removeVisible=View.INVISIBLE
+    private var timer: Timer? = null
+    private lateinit var alarmHelper: AlarmDatabaseHelper
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         //addAlarm=findViewById(R.id.addAlarm);
         //removeAlarm=findViewById(R.id.removeAlarm);
+        nextAlarmText=findViewById(R.id.nextAlarmTime)
         toolbar=findViewById(R.id.toolbar)
         //createNotificationChannel();
+        collapsingToolbar=findViewById(R.id.collapsingBarLayout)
+        collapsingToolbar.setExpandedTitleTextAppearance(R.style.AppBarExpanded)
+        collapsingToolbar.setCollapsedTitleTextAppearance(R.style.AppBarCollapsed)
+
 
         setSupportActionBar(toolbar)
 
@@ -48,9 +62,11 @@ class MainActivity : AppCompatActivity() {
 
 
         recyclerView= findViewById(R.id.alarmRecycler)
-        recyclerView.setBackgroundColor(Color.parseColor("#F0F0F0"))
+        recyclerView.setBackgroundColor(resources.getColor(R.color.darkish_color))
         recyclerView.layoutManager=LinearLayoutManager(this)
         recyclerView.setHasFixedSize(true)
+        val context: Context = this
+        alarmHelper=AlarmDatabaseHelper.getInstance(context);
         initRecyclerData();
         //Gets AlarmEditor data
         val data = intent.getStringExtra("key")
@@ -61,7 +77,7 @@ class MainActivity : AppCompatActivity() {
             //addRecyclerAlarm(data);
         }
 
-
+        startTimer()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -103,36 +119,18 @@ class MainActivity : AppCompatActivity() {
        // Retrieve all alarms from SQLite database
 
        val context: Context = this
-       val alarmHelper = AlarmDatabaseHelper.getInstance(context);
 
+       val am= AlarmManagerHelper.getInstance(context)
        val db = alarmHelper.readableDatabase
        val cursor = db.query("alarm", null, null, null, null, null, "time ASC" )
 
        with(cursor) {
            while (moveToNext()) {
                val alarmId = getInt(getColumnIndexOrThrow("_id"))
-               val alarmTime=getLong(getColumnIndexOrThrow("time"))
+               var alarmTime=getLong(getColumnIndexOrThrow("time"))
                val alarmToggle=getInt(getColumnIndexOrThrow("toggle"))
-               // Create an Alarm object and add it to the list
-               val dateTime=convertTimeInMillisToDate(alarmTime)
-               Log.d("date", "$dateTime")
-               val parts = dateTime.split(" ")
-               var date=""
-               var time=""
-               var meridian= ""
 
-               if (parts.size >= 2) {
-                   date = parts[0]
-                   if(parts[1].get(0)=='0'){
-                       time = parts[1].drop(1)
-                   }
-                   else{
-                       time=parts[1]
-                   }
-                   meridian = parts[2]
-               }
-               alarmList.add(AlarmItemModel(time,meridian,date,alarmId,alarmToggle ))
-               //alarmList.add(AlarmItemModel(time,meridian,date,alarmId ))
+               alarmList.add(AlarmItemModel(alarmTime,alarmId,alarmToggle))
            }
            close()
        }
@@ -179,6 +177,79 @@ class MainActivity : AppCompatActivity() {
         return simpleDateFormat.format(date)
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // Stop the timer when the activity is destroyed
+        stopTimer()
+    }
+
+    private fun startTimer() {
+        // Use Handler to update the UI on the main thread
+        val handler = Handler(mainLooper)
+
+        timer = Timer()
+        timer?.scheduleAtFixedRate(object : TimerTask() {
+            override fun run() {
+                // Update the time difference for each item in the list
+                var lowestTimeDiff=Long.MAX_VALUE
+
+                for (item in alarmList) {
+                    val(toggle,time)=alarmHelper.retrieveData(item.alarmId)
+                    val timeInMillis = item.alarmTimeInMillis
+                    // Call updateTimeDifference in the UI thread
+                    val timeDifference=checkTimeDifference(timeInMillis)
+                    if(toggle==1){
+
+                        if (timeDifference<lowestTimeDiff){
+                            lowestTimeDiff=timeDifference
+                        }
+
+                    }
+                    if(timeDifference<0){
+                        handler.post {
+                            initRecyclerData()
+                            _adapter.notifyDataSetChanged()
+                        }
+                    }
+                    handler.post {
+
+                        if(lowestTimeDiff>0&&lowestTimeDiff!= Long.MAX_VALUE){
+
+                            val timeInHMS= String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(lowestTimeDiff),
+                                TimeUnit.MILLISECONDS.toMinutes(lowestTimeDiff) - TimeUnit.HOURS.toMinutes(TimeUnit.MILLISECONDS.toHours(lowestTimeDiff)),
+                                TimeUnit.MILLISECONDS.toSeconds(lowestTimeDiff) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(lowestTimeDiff)));
+
+
+                            nextAlarmText.text="Next alarm in $timeInHMS"
+                        }
+                        else{
+                            nextAlarmText.text="All alarms off"
+                        }
+                    }
+                }
+
+
+
+            }
+        }, 0, 1000) // Update every 1 second
+    }
+
+    private fun stopTimer() {
+        timer?.cancel()
+        timer = null
+    }
+
+    fun checkTimeDifference(timeInMillis: Long) : Long{
+        val currentTimeMillis = System.currentTimeMillis()
+        val timeDifference = timeInMillis - currentTimeMillis
+
+        if (timeDifference > 0) {
+
+        } else {
+
+        }
+        return timeDifference
+    }
 
 
 

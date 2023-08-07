@@ -3,7 +3,22 @@
     <style name="CustomTimePickerStyle" parent="@android:style/Widget.Material.Light.TimePicker">
         <!-- Customize the colors as per your requirement -->
         <item name="android:numbersTextColor">#FF0000</item> <!-- Hour and minute numbers color -->
-        <item name="android:numbersBackgroundColor">#FFFFFF</item> <!-- Background color of numbers -->
-        <item name="android:numbersSelectorColor">#00FF00</item> <!-- Color of the number selector -->
+        <item name="android:numbersBackgroundColor">@color/darkish_color</item> <!-- Background color of numbers -->
+        <item name="android:numbersSelectorColor">@color/white</item> <!-- Color of the number selector -->
     </style>
+    <style name="AppBarCollapsed" parent="@android:style/TextAppearance.Medium">
+        <item name="android:textSize">32sp</item>
+        <item name="android:alpha">1</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="AppBarExpanded" parent="@android:style/TextAppearance.Medium">
+        <item name="android:textSize">32sp</item>
+        <item name="android:alpha">0</item>
+        <item name="android:textColor">@color/darkish_color</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+
 </resources>
