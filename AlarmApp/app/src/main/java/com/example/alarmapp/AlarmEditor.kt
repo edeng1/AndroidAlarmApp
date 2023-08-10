@@ -10,14 +10,15 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.TimePicker
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import java.util.*
-
 
 
 class AlarmEditor : AppCompatActivity() {
@@ -26,11 +27,32 @@ class AlarmEditor : AppCompatActivity() {
     private lateinit var cancelButton : Button;
     private lateinit var timePicker: TimePicker;
     private lateinit var alarmManager: AlarmManager
+    private lateinit var checkBoxes: Array<CheckBox>
+    private lateinit var checkedBoxes: Array<Boolean>
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_alarm_editor)
+
+        checkedBoxes = Array(7) { false }
+
+      checkBoxes= arrayOf(
+            findViewById<CheckBox>(R.id.monday),
+            findViewById<CheckBox>(R.id.tuesday),
+            findViewById<CheckBox>(R.id.wednsday),
+            findViewById<CheckBox>(R.id.thursday),
+            findViewById<CheckBox>(R.id.friday),
+            findViewById<CheckBox>(R.id.saturday),
+            findViewById<CheckBox>(R.id.sunday),
+        )
+
+        for((index,cb) in checkBoxes.withIndex()){
+            cb.setOnCheckedChangeListener { buttonView, isChecked ->
+                checkedBoxes[index]=isChecked
+            }
+        }
+
 
         saveButton=findViewById(R.id.saveButton);
         cancelButton=findViewById(R.id.cancelButton);
@@ -50,17 +72,32 @@ class AlarmEditor : AppCompatActivity() {
             val id=intent.getIntExtra("key",6)
             val data=alarmHelper.retrieveData(id)
             val(toggle,time)=alarmHelper.retrieveData(id)
+            val(weekDays,label)=alarmHelper.retrieveWeekDaysLabel(id)
             val cal=Calendar.getInstance()
             //Set time picker as the current alarm time that is stored in the db
             if (data != null) {
                 cal.timeInMillis = time
                 timePicker.hour=cal.get(Calendar.HOUR_OF_DAY)
                 timePicker.minute=cal.get(Calendar.MINUTE)
+
             }
 
+            if(weekDays!=null || weekDays!= ""){
 
+                checkedBoxes=alarmHelper.convertStringToArray(weekDays)
+
+                for((index,cb) in checkBoxes.withIndex()){
+                    cb.isChecked=checkedBoxes[index]
+                }
+            }
+
+            if(label!=null||label!=""){
+
+            }
 
         }
+
+
 
 
         cancelButton.setOnClickListener {
@@ -68,6 +105,8 @@ class AlarmEditor : AppCompatActivity() {
             startActivity(intent)
         }
         saveButton.setOnClickListener {
+
+            val am=AlarmManagerHelper.getInstance(this)
 
             val hour = timePicker.hour
             val minute = timePicker.minute
@@ -78,6 +117,7 @@ class AlarmEditor : AppCompatActivity() {
             calendar.set(Calendar.HOUR_OF_DAY, hour)
             calendar.set(Calendar.MINUTE, minute)
             calendar.set(Calendar.SECOND, 0)
+            //calendar.set(Calendar.DAY_OF_WEEK, Calendar.TUESDAY)
 
             val currentTime = Calendar.getInstance().timeInMillis
 
@@ -85,12 +125,26 @@ class AlarmEditor : AppCompatActivity() {
             if (calendar.timeInMillis < currentTime) {
                 // Add one day to the selected time
                 calendar.add(Calendar.DATE, 1)
+
             }
 
-            val meridian = when {
-                calendar.get(Calendar.AM_PM) == Calendar.AM -> "AM"
-                else -> "PM"
+
+
+            //If a box is checked
+            val allDaysOff=am.allDaysOfWeekOff(checkedBoxes)
+            //If a day of week check box checked
+            if(!allDaysOff){
+                calendar.timeInMillis= am.dayOfWeekInMillis(checkedBoxes,calendar.timeInMillis)
             }
+
+
+            val t = am.convertTimeInMillisToDate(calendar.timeInMillis)
+            Log.d("Time","$t ")
+            for((index,cb) in checkedBoxes.withIndex()){
+                Log.d("Time2","$cb + $index")
+            }
+
+
 
 
 
@@ -103,15 +157,21 @@ class AlarmEditor : AppCompatActivity() {
             //A new added alarm
             if(!intent.hasExtra("key")) {
                 // Add to database
-                val count = alarmHelper.getAlarmCount()
+
                 val values = ContentValues().apply {
                     //put("_id", count + 1)
                     put("time", calendar.timeInMillis)
                     put("toggle",1)
+                    put("weekdays",alarmHelper.convertArrayToString(checkedBoxes))
                 }
                 val id=db.insert("alarm", null, values)
+
+
                 Toast.makeText(this, "ID is $id", Toast.LENGTH_SHORT).show()
                 db.close()
+
+
+
                 // Get the alarm manager
                 alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
@@ -120,6 +180,7 @@ class AlarmEditor : AppCompatActivity() {
                 intent.putExtra("key",id.toInt())
                 val pendingIntent = PendingIntent.getBroadcast(this, id.toInt(), intent, FLAG_IMMUTABLE)
                 // use count as requestCode so the pendingIntent can be retrieved later.
+
 
                 // Set the alarm
                 alarmManager.setAlarmClock(AlarmManager.AlarmClockInfo(calendar.timeInMillis,pendingIntent),pendingIntent)
@@ -135,6 +196,13 @@ class AlarmEditor : AppCompatActivity() {
             //Editing already existing alarm
             else{
                 val id=intent.getIntExtra("key",alarmHelper.getAlarmCount())
+
+                //Boxes are checked
+
+                    alarmHelper.updateDaysOfWeek(id,alarmHelper.convertArrayToString(checkedBoxes))
+                if(!allDaysOff){
+                    calendar.timeInMillis= am.dayOfWeekInMillis(checkedBoxes,calendar.timeInMillis)
+                }
                 val intent = Intent(this, AlarmReceiver::class.java)
                 intent.putExtra("key",id)
                 val pendingIntent = PendingIntent.getBroadcast(this, id, intent, FLAG_IMMUTABLE)

@@ -45,6 +45,26 @@
         </TextView>
 
         <TextView
+            android:id="@+id/daysOfWeekText"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_alignBottom="@id/dateText"
+
+            android:layout_marginLeft="242dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginRight="25dp"
+            android:fontFamily="sans-serif-thin"
+            android:text="M T W T F S S"
+            android:textAlignment="viewEnd"
+            android:textColor="@color/white"
+            android:textSize="13dp"
+            android:textStyle="bold"
+            android:visibility="invisible"
+            >
+
+        </TextView>
+
+        <TextView
             android:id="@+id/dateText"
             android:layout_width="70dp"
             android:layout_height="wrap_content"

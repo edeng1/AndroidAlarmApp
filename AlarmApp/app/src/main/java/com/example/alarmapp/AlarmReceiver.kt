@@ -47,8 +47,17 @@ class AlarmReceiver : BroadcastReceiver() {
                 val calendar = Calendar.getInstance()
                 calendar.timeInMillis=time
                 calendar.add(Calendar.DAY_OF_YEAR, 1)
-                val newTime=calendar.timeInMillis
-                am.setAlarm(requestCode,time,pendingIntent,"")
+                var newTime=calendar.timeInMillis
+
+                //CHeck if week day boxes are checked
+                val (week,label)= db.retrieveWeekDaysLabel(requestCode)
+                val checkedBoxes=db.convertStringToArray((week))
+                if(!am.allDaysOfWeekOff(checkedBoxes)){
+                    newTime=am.dayOfWeekInMillis(checkedBoxes,calendar.timeInMillis)
+                }
+
+
+                am.setAlarm(requestCode,newTime,pendingIntent,"")
             }
             else{
 

@@ -4,7 +4,13 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
 import android.opengl.Visibility
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
+import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -45,7 +51,7 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
         val alarmDate: TextView = itemView.findViewById(R.id.dateText);
         val alarmSwitch: Switch = itemView.findViewById(R.id.alarmSwitch)
         val alarmRemove: ImageView=itemView.findViewById(R.id.deleteTime)
-
+        val dayOfWeek: TextView= itemView.findViewById(R.id.daysOfWeekText)
         init {
             itemView.setOnClickListener(this)
 
@@ -115,12 +121,14 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
 
         val (timeString,meridian,date)=convertTimeInMillisToDate(item.alarmTimeInMillis)
 
-
+        val am=AlarmManagerHelper.getInstance(context)
+        val db=AlarmDatabaseHelper.getInstance(context)
 
         holder.alarmTime.setText(timeString);
         holder.alarmMeridian.text = meridian;
         holder.alarmDate.setText(date);
 
+        val dayOfWeekText=holder.dayOfWeek
         val switch=holder.alarmSwitch
         val remove= holder.alarmRemove
         val fadeInAnimationA = AnimationUtils.loadAnimation(switch.context, R.anim.fade_in)
@@ -140,6 +148,23 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
             remove.visibility=removeVisibility
         }
 
+        val (week,label)=db.retrieveWeekDaysLabel(item.alarmId)
+        val checkedBoxes=db.convertStringToArray(week)
+
+        //Sets MWTFSS visibility and bolds them if checkboxes are checked
+        if(!am.allDaysOfWeekOff(checkedBoxes)){
+            val spannableString = SpannableStringBuilder("M T W T F S S ")
+            for((index,cb)in checkedBoxes.withIndex()){
+                if(cb){
+                    spannableString.setSpan(ForegroundColorSpan(Color.RED),index*2,(index*2)+1,SpannableStringBuilder.SPAN_INCLUSIVE_INCLUSIVE)
+                }
+
+            }
+
+            dayOfWeekText.visibility=View.VISIBLE
+            dayOfWeekText.text=spannableString
+        }
+
 
 
         DataHolder.getInstance().hashMap[position]=item.alarmId
@@ -150,11 +175,12 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
         }
 
 
+
         //Toggle alarm
        switch.setOnCheckedChangeListener { buttonView, isChecked ->
             // Get the alarm manager
-           val db=AlarmDatabaseHelper.getInstance(context)
-           val am=AlarmManagerHelper.getInstance(context)
+
+
             val intent = Intent(context, AlarmReceiver::class.java)
             intent.putExtra("key",item.alarmId)
             val pendingIntent = PendingIntent.getBroadcast(context, item.alarmId, intent, PendingIntent.FLAG_IMMUTABLE)

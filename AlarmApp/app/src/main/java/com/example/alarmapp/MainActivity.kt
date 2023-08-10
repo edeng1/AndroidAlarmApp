@@ -54,10 +54,7 @@ class MainActivity : AppCompatActivity() {
 
         setSupportActionBar(toolbar)
 
-//        addAlarm.setOnClickListener {
-//
-//
-//        }
+
 
 
 
@@ -119,6 +116,7 @@ class MainActivity : AppCompatActivity() {
        // Retrieve all alarms from SQLite database
 
        val context: Context = this
+       val dd=AlarmDatabaseHelper.getInstance(context)
 
        val am= AlarmManagerHelper.getInstance(context)
        val db = alarmHelper.readableDatabase

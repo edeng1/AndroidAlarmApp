@@ -4,7 +4,9 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.google.gson.Gson
 import java.util.*
+
 
 class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
@@ -18,6 +20,9 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
         private const val COLUMN_TIME = "time"
         private const val COLUMN_LABEL = "label"
         private const val COLUMN_TOGGLE = "toggle"
+        private const val COLUMN_WEEKDAYS = "weekdays"
+        private const val COLUMN_TONES = "tones"
+        private const val COLUMN_SHUTOFFTIME = "shutofftime"
         // Add other columns as needed
 
         // Singleton instance
@@ -35,7 +40,8 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
         // Create the alarm table when the database is first created
 
         val createTableQuery = "CREATE TABLE IF NOT EXISTS $TABLE_ALARM " +
-                "($COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT, $COLUMN_TIME LONG, $COLUMN_TOGGLE INTEGER)"
+                "($COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT, $COLUMN_TIME LONG, $COLUMN_TOGGLE INTEGER, " +
+                "$COLUMN_WEEKDAYS STRING, $COLUMN_LABEL STRING)" //$COLUMN_TONES STRING, $COLUMN_SHUTOFFTIME LONG
         db.execSQL(createTableQuery)
     }
 
@@ -48,12 +54,7 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
             db.execSQL("ALTER TABLE $TABLE_ALARM ADD COLUMN $COLUMN_TOGGLE INTEGER DEFAULT 0")
         }
     }
-    fun recreateTable() {
-        val db = writableDatabase
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_ALARM")
-        onCreate(db)
-        db.close()
-    }
+
 
     // Add methods to interact with the database here (e.g., insertAlarm, updateAlarm, deleteAlarm, etc.)
 
@@ -104,6 +105,27 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
     }
         return Pair(0,0);
     }
+    fun retrieveWeekDaysLabel(alarmId: Int): Pair<String,String> {
+        val db = this.readableDatabase
+        val cursor = db.query("alarm", null, null, null, null, null, "null")
+
+        with(cursor) {
+            while (moveToNext()) {
+                val _id = getInt(getColumnIndexOrThrow("_id"))
+                val weekDays=getString(getColumnIndexOrThrow("weekdays"))
+                val label=getString(getColumnIndexOrThrow("label"))
+                if(alarmId==_id){
+                    return Pair(weekDays,label)
+                }
+
+            }
+            close()
+        }
+        return Pair("","");
+    }
+
+
+
 
 
 
@@ -126,6 +148,25 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
         return newTime
     }
 
+    fun updateDaysOfWeek(id: Int,weekDays: String,){
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put("_id",id )
+            put("weekdays",weekDays)
+
+        }
+        // Define the selection criteria to identify the item you want to update
+        val selection = "_id = ?"
+        val selectionArgs = arrayOf(id.toString()) // Replace "1" with the ID of the item you want to update
+
+        // Update the item in the database
+        db.update("alarm", values, selection, selectionArgs)
+
+    }
+
+
+
+
     fun isTimeBeforeCurrentTime(time: Long): Long{
         val calendar = Calendar.getInstance()
         var newTime=time
@@ -139,6 +180,17 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
         }
         return newTime
     }
+
+    // Convert array to string (JSON format in this example)
+    fun convertArrayToString(array: Array<Boolean>): String {
+        return Gson().toJson(array)
+    }
+
+    // Convert string back to array
+    fun convertStringToArray(arrayString: String): Array<Boolean> {
+        return Gson().fromJson(arrayString, Array<Boolean>::class.java)
+    }
+
 
     fun clearDatabase(TABLE_NAME: String) {
         val db = this.writableDatabase
@@ -155,6 +207,12 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
         // Execute the SQL command to drop the table
         db.execSQL("DROP TABLE IF EXISTS $TABLE_ALARM")
 
+        db.close()
+    }
+    fun recreateTable() {
+        val db = writableDatabase
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_ALARM")
+        onCreate(db)
         db.close()
     }
 
