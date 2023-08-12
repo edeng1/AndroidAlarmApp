@@ -39,6 +39,8 @@ class MainActivity : AppCompatActivity() {
     private var removeVisible=View.INVISIBLE
     private var timer: Timer? = null
     private lateinit var alarmHelper: AlarmDatabaseHelper
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -127,8 +129,9 @@ class MainActivity : AppCompatActivity() {
                val alarmId = getInt(getColumnIndexOrThrow("_id"))
                var alarmTime=getLong(getColumnIndexOrThrow("time"))
                val alarmToggle=getInt(getColumnIndexOrThrow("toggle"))
-
-               alarmList.add(AlarmItemModel(alarmTime,alarmId,alarmToggle))
+               var alarmLabel=getString(getColumnIndexOrThrow("label"))
+               if(alarmLabel==null){alarmLabel=""}
+               alarmList.add(AlarmItemModel(alarmTime,alarmId,alarmToggle,alarmLabel))
            }
            close()
        }

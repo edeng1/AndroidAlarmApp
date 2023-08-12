@@ -163,6 +163,21 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
         db.update("alarm", values, selection, selectionArgs)
 
     }
+    fun updateLabel(id: Int,label: String,){
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put("_id",id )
+            put("label",label)
+
+        }
+        // Define the selection criteria to identify the item you want to update
+        val selection = "_id = ?"
+        val selectionArgs = arrayOf(id.toString()) // Replace "1" with the ID of the item you want to update
+
+        // Update the item in the database
+        db.update("alarm", values, selection, selectionArgs)
+
+    }
 
 
 

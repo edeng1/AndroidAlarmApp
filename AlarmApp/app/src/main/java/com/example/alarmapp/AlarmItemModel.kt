@@ -5,6 +5,7 @@ data class AlarmItemModel(
     var alarmTimeInMillis:Long,
     var alarmId:Int,
     var alarmToggle:Int,
+    var alarmLabel:String,
     )
 
 

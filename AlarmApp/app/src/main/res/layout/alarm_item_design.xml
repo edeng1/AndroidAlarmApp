@@ -14,6 +14,20 @@
         android:background="@color/bluish_color">
 
         <TextView
+            android:id="@+id/labelText"
+            android:layout_width="wrap_content"
+            android:layout_height="25dp"
+            android:layout_marginLeft="35dp"
+            android:layout_marginBottom="25dp"
+            android:layout_alignBottom="@id/timeText"
+            android:fontFamily="sans-serif-thin"
+            android:text=""
+            android:textColor="@color/white"
+            android:textSize="12dp"
+            android:textStyle="bold">
+
+        </TextView>
+        <TextView
             android:id="@+id/timeText"
             android:layout_width="64dp"
             android:layout_height="wrap_content"

@@ -52,6 +52,7 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
         val alarmSwitch: Switch = itemView.findViewById(R.id.alarmSwitch)
         val alarmRemove: ImageView=itemView.findViewById(R.id.deleteTime)
         val dayOfWeek: TextView= itemView.findViewById(R.id.daysOfWeekText)
+        val alarmLabel: TextView = itemView.findViewById(R.id.labelText);
         init {
             itemView.setOnClickListener(this)
 
@@ -97,7 +98,7 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
         fun bindItem(item:AlarmItemModel,context: Context){
             updateTimeDifference(item.alarmId,item.alarmToggle,item.alarmTimeInMillis,context)
         }
-        //If current time passes alarm, it must update.
+        //If current time passes alarm, it must update. Called in main activity, start timerkl;
         fun updateTimeDifference(id: Int,toggle: Int,timeInMillis: Long, context: Context  ) {
             val db=AlarmDatabaseHelper.getInstance(context)
             val currentTimeMillis = System.currentTimeMillis()
@@ -127,7 +128,7 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
         holder.alarmTime.setText(timeString);
         holder.alarmMeridian.text = meridian;
         holder.alarmDate.setText(date);
-
+        holder.alarmLabel.setText(item.alarmLabel)
         val dayOfWeekText=holder.dayOfWeek
         val switch=holder.alarmSwitch
         val remove= holder.alarmRemove
@@ -183,6 +184,7 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
 
             val intent = Intent(context, AlarmReceiver::class.java)
             intent.putExtra("key",item.alarmId)
+            intent.action = "ALARM_SET"
             val pendingIntent = PendingIntent.getBroadcast(context, item.alarmId, intent, PendingIntent.FLAG_IMMUTABLE)
 
             val id=item.alarmId
