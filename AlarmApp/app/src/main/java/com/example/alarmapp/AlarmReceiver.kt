@@ -27,7 +27,7 @@ class AlarmReceiver : BroadcastReceiver() {
             .setContentTitle("Alarm go boom boom")
             .setContentText("Your alarm has gone off.")
             .setDefaults(NotificationCompat.DEFAULT_ALL)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
 
@@ -62,8 +62,10 @@ class AlarmReceiver : BroadcastReceiver() {
             val db=AlarmDatabaseHelper.getInstance(context)
             val am=AlarmManagerHelper.getInstance(context)
             val (toggle,time)=db.retrieveData(requestCode)
+            val(tones,shutoff)=db.retrieveTonesShutOffTime(requestCode)
             if(toggle==1){
                 intent.putExtra("key",requestCode)
+                intent.putExtra("shutoff",shutoff)
                 intent.action = "ALARM_SET"
                 val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, FLAG_IMMUTABLE)
                 val calendar = Calendar.getInstance()

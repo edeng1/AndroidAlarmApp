@@ -111,12 +111,85 @@
             android:text="Tone: "
             android:textColor="@color/white"/>
         <Spinner
+            android:id="@+id/tonesSpinner"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:entries="@array/tones"
 
             />
+
     </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Shut-off Time: "
+            android:textColor="@color/white" />
+
+        <Spinner
+            android:id="@+id/shutOffSpinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:entries="@array/shutoff_time"
+            android:layout_gravity="center_vertical"
+
+            />
+        <LinearLayout
+            android:id="@+id/numberPickerLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            >
+
+        <NumberPicker
+            android:id="@+id/hourPicker"
+            android:layout_width="40dp"
+            android:layout_height="55dp"
+            android:calendarViewShown="false"
+            android:timePickerMode="spinner"
+            />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=":"
+                android:layout_gravity="center"
+                android:textSize="20sp"/>
+
+        <NumberPicker
+            android:id="@+id/minutePicker"
+            android:layout_width="40dp"
+            android:layout_height="55dp"
+            android:calendarViewShown="false"
+            android:timePickerMode="spinner"
+            />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=":"
+                android:layout_gravity="center"
+                android:textSize="20sp"
+                />
+        <NumberPicker
+            android:id="@+id/secondPicker"
+            android:layout_width="40dp"
+            android:layout_height="55dp"
+            android:calendarViewShown="false"
+            android:timePickerMode="spinner"
+            />
+        </LinearLayout>
+
+
+
+    </LinearLayout>
+
+
+
 
     <LinearLayout
         android:layout_width="match_parent"

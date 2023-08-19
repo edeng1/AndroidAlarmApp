@@ -130,6 +130,7 @@ class MainActivity : AppCompatActivity() {
                var alarmTime=getLong(getColumnIndexOrThrow("time"))
                val alarmToggle=getInt(getColumnIndexOrThrow("toggle"))
                var alarmLabel=getString(getColumnIndexOrThrow("label"))
+
                if(alarmLabel==null){alarmLabel=""}
                alarmList.add(AlarmItemModel(alarmTime,alarmId,alarmToggle,alarmLabel))
            }
@@ -209,6 +210,7 @@ class MainActivity : AppCompatActivity() {
                     if(timeDifference<0){
                         handler.post {
                             initRecyclerData()
+
                             _adapter.notifyDataSetChanged()
                         }
                     }

@@ -9,18 +9,21 @@ import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
+import android.content.res.Resources
+import android.opengl.Visibility
 import android.os.Build
 import android.os.Bundle
 import android.text.InputFilter
 import android.util.Log
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.TimePicker
-import android.widget.Toast
+import android.view.MotionEvent
+import android.view.View
+import android.view.animation.AnimationUtils
+import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
+import androidx.core.view.iterator
+import androidx.core.view.size
 import java.util.*
 
 
@@ -33,7 +36,15 @@ class AlarmEditor : AppCompatActivity() {
     private lateinit var checkBoxes: Array<CheckBox>
     private lateinit var checkedBoxes: Array<Boolean>
     private lateinit var labelText: EditText
-
+    private lateinit var shutOffSpinner: Spinner
+    private lateinit var tonesSpinner: Spinner
+    private lateinit var hourPicker: NumberPicker
+    private lateinit var minutePicker: NumberPicker
+    private lateinit var secondPicker: NumberPicker
+    private var selectedSpinnerItem: String = ""
+    private var shutOffisForever: Boolean=true
+    private var shutOffTimeLong: Long=-1
+    var hasSpinnerOpened = false
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,20 +69,35 @@ class AlarmEditor : AppCompatActivity() {
         }
 
         labelText=findViewById(R.id.labelEditText)
-
-
-
         saveButton=findViewById(R.id.saveButton);
         cancelButton=findViewById(R.id.cancelButton);
         timePicker=findViewById(R.id.timePicker);
-        onTimePicked();
+
+        shutOffSpinner=findViewById(R.id.shutOffSpinner)
+        hourPicker=findViewById(R.id.hourPicker)
+        minutePicker=findViewById(R.id.minutePicker)
+        secondPicker=findViewById(R.id.secondPicker)
+        tonesSpinner=findViewById(R.id.tonesSpinner)
+
+
+        setItemLayouts()
+        setUpShutoffPickers()
+        handleShutOffTime()
         createNotificationChannel();
 
         //default time is 6:00
         timePicker.hour=6;
         timePicker.minute=0;
 
-        //If clicked on an alarm object
+        //label cant be over 20 chars
+        val maxLength = 20
+        val filters = arrayOf<InputFilter>(InputFilter.LengthFilter(maxLength))
+        labelText.filters = filters
+        if(labelText.text==null){
+            labelText.setText("")
+        }
+
+        //If clicked on an alarm object, set data from database
         if(intent.hasExtra("key")){
             //timePicker.hour=intent.getIntExtra("key",6)
             val context: Context = this
@@ -80,6 +106,7 @@ class AlarmEditor : AppCompatActivity() {
             val data=alarmHelper.retrieveData(id)
             val(toggle,time)=alarmHelper.retrieveData(id)
             val(weekDays,label)=alarmHelper.retrieveWeekDaysLabel(id)
+            val(tones,shutofftime)=alarmHelper.retrieveTonesShutOffTime(id)
             val cal=Calendar.getInstance()
             //Set time picker as the current alarm time that is stored in the db
             if (data != null) {
@@ -88,7 +115,7 @@ class AlarmEditor : AppCompatActivity() {
                 timePicker.minute=cal.get(Calendar.MINUTE)
 
             }
-
+            //Set check boxes as checked boxes that are stored in the db
             if(weekDays!=null || weekDays!= ""){
 
                 checkedBoxes=alarmHelper.convertStringToArray(weekDays)
@@ -97,16 +124,38 @@ class AlarmEditor : AppCompatActivity() {
                     cb.isChecked=checkedBoxes[index]
                 }
             }
-
+            //Set label as label from db
             if(label!=null||label!=""){
                 labelText.setText(label)
             }
-            val maxLength = 20
-            val filters = arrayOf<InputFilter>(InputFilter.LengthFilter(maxLength))
 
-            labelText.filters = filters
-            if(labelText.text==null){
-                labelText.setText("")
+
+
+            //Set selected tone as tones from db
+            val adapter=tonesSpinner.adapter
+
+            for (position in 0 until adapter.count) {
+                if (adapter.getItem(position) == tones) {
+                    tonesSpinner.setSelection(position)
+                    break
+                }
+            }
+
+            //Set shutOffTimePickers from db
+            if(shutofftime==-1L){
+                shutOffSpinner.setSelection(0)
+                shutOffisForever=true
+            }
+            else{
+                //Set selection automatically calls setOnItemSelectedListener
+                shutOffSpinner.setSelection(1)
+                shutOffisForever=false
+
+                val(h,m,s)=alarmHelper.convertMillisecondsToHoursMinSecs(shutofftime)
+                hourPicker.value=h
+                minutePicker.value=m
+                secondPicker.value=s
+
             }
 
         }
@@ -146,25 +195,29 @@ class AlarmEditor : AppCompatActivity() {
 
             //If a box is checked
             val allDaysOff=am.allDaysOfWeekOff(checkedBoxes)
-            //If a day of week check box checked
+            //If a day of week check box checked choose time as the nearest day of week from current time
             if(!allDaysOff){
                 calendar.timeInMillis= am.dayOfWeekInMillis(checkedBoxes,calendar.timeInMillis)
             }
 
-
+            //Log checked boxes and date alarm will go off
             val t = am.convertTimeInMillisToDate(calendar.timeInMillis)
             Log.d("Time","$t ")
             for((index,cb) in checkedBoxes.withIndex()){
                 Log.d("Time2","$cb + $index")
             }
 
-
+            //shut off spinner is on setTime not forever
 
 
 
             // Get database
             val context: Context = this
             val alarmHelper = AlarmDatabaseHelper.getInstance(context);
+
+            if(!shutOffisForever){
+                shutOffTimeLong=alarmHelper.convertHourMinSecToMilliseconds(hourPicker.value,minutePicker.value,secondPicker.value)
+            }
 
             val db = alarmHelper.writableDatabase
 
@@ -178,6 +231,8 @@ class AlarmEditor : AppCompatActivity() {
                     put("toggle",1)
                     put("weekdays",alarmHelper.convertArrayToString(checkedBoxes))
                     put("label",labelText.text.toString())
+                    put("tones",tonesSpinner.selectedItem.toString())
+                    put("shutofftime",shutOffTimeLong)
                 }
                 val id=db.insert("alarm", null, values)
 
@@ -193,6 +248,7 @@ class AlarmEditor : AppCompatActivity() {
                 // Create a pending intent for the alarm
                 val intent = Intent(this, AlarmReceiver::class.java)
                 intent.putExtra("key",id.toInt())
+                intent.putExtra("shutoff",shutOffTimeLong)
                 intent.action = "ALARM_SET"
                 val pendingIntent = PendingIntent.getBroadcast(this, id.toInt(), intent, FLAG_IMMUTABLE)
                 // use count as requestCode so the pendingIntent can be retrieved later.
@@ -217,11 +273,17 @@ class AlarmEditor : AppCompatActivity() {
 
                 alarmHelper.updateDaysOfWeek(id,alarmHelper.convertArrayToString(checkedBoxes))
                 alarmHelper.updateLabel(id,labelText.text.toString())
+                //
+                //update tones and shutofftime
+                alarmHelper.updateTones(id,tonesSpinner.selectedItem.toString())
+                alarmHelper.updateShutOffTime(id,shutOffTimeLong)
+
                 if(!allDaysOff){
                     calendar.timeInMillis= am.dayOfWeekInMillis(checkedBoxes,calendar.timeInMillis)
                 }
                 val intent = Intent(this, AlarmReceiver::class.java)
                 intent.putExtra("key",id)
+                intent.putExtra("shutoff",shutOffTimeLong)
                 intent.action = "ALARM_SET"
                 val pendingIntent = PendingIntent.getBroadcast(this, id, intent, FLAG_IMMUTABLE)
                 val am=AlarmManagerHelper.getInstance(this).setAlarm(id,calendar.timeInMillis,pendingIntent,"")
@@ -233,24 +295,150 @@ class AlarmEditor : AppCompatActivity() {
         }
 
     }
-    fun onTimePicked(){
-        timePicker.setOnTimeChangedListener { view, hourOfDay, minute ->
-            // Do something here when the time is changed
-            //hour = hourOfDay;
-           // min=minute;
+
+    private fun setItemLayouts() {
+        val adap = tonesSpinner.adapter as ArrayAdapter<String?>
+        val itemList = ArrayList<String?>()
+        for (i in 0 until adap.count) {
+            val item = adap.getItem(i)
+            itemList.add(item)
         }
+        tonesSpinner.adapter
+        val adapter=ArrayAdapter<String>(this, R.layout.custom_spinner_item,itemList)
+        tonesSpinner.adapter = adapter
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+
+
+        val adap2 = shutOffSpinner.adapter as ArrayAdapter<String?>
+        val itemList2 = ArrayList<String?>()
+        for (i in 0 until adap2.count) {
+            val item = adap2.getItem(i)
+            itemList2.add(item)
+        }
+        shutOffSpinner.adapter
+        val adapter2=ArrayAdapter<String>(this, R.layout.custom_spinner_item,itemList2)
+        shutOffSpinner.adapter = adapter2
+        adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+
+
+        //val numberPickerEditText = hourPicker.findViewById<View>(Resources.getSystem().getIdentifier("numberpicker_input", "id", "android")) as EditText
+
+        // Set the text color of the EditText
+//        numberPickerEditText.setTextColor(ContextCompat.getColor(this, R.color.white))
+//        numberPickerEditText.setHighlightColor(ContextCompat.getColor(this, R.color.white))
+
+        val customDrawable = ContextCompat.getDrawable(this, R.drawable.custom_numberpicker_background)
+
+// Set the custom drawable as the background of the NumberPicker
+
+        val parentLayout = findViewById<LinearLayout>(R.id.numberPickerLayout)
+        parentLayout.background=customDrawable
+
 
     }
+
+    fun setUpShutoffPickers(){
+
+        hourPicker.minValue=0
+        hourPicker.maxValue=60
+        hourPicker.setFormatter(NumberPicker.Formatter { i -> String.format("%02d", i) })//2 digit values onlyjkl/
+        minutePicker.minValue=0
+        minutePicker.maxValue=60
+        minutePicker.setFormatter(NumberPicker.Formatter { i -> String.format("%02d", i) })//2 digit values onlyjkl/
+
+        secondPicker.minValue=0
+        secondPicker.maxValue=60
+
+        minutePicker.value=3
+        secondPicker.setFormatter(NumberPicker.Formatter { i -> String.format("%02d", i) })//2 digit values onlyjkl/
+
+    }
+
+    fun handleShutOffTime(){
+        val parentLayout = findViewById<LinearLayout>(R.id.numberPickerLayout)
+        val fadeInAnimation = AnimationUtils.loadAnimation(parentLayout.context, R.anim.fade_in)
+        val fadeOutAnimation = AnimationUtils.loadAnimation(parentLayout.context, R.anim.fade_out)
+        var pos=0;
+        shutOffSpinner.setOnItemSelectedListener(object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                pos=position
+                selectedSpinnerItem = parent.getItemAtPosition(position).toString()
+                if(position==0){
+                    //Makes it so animation doesnt happen when alarm editor is first opened, only when a spinner is touched
+                    if(hasSpinnerOpened())
+                        parentLayout.startAnimation(fadeOutAnimation)
+                    parentLayout.visibility=View.INVISIBLE
+                    hourPicker.visibility=View.INVISIBLE
+                    secondPicker.visibility=View.INVISIBLE
+                    minutePicker.visibility=View.INVISIBLE
+                    shutOffTimeLong=-1L
+                    shutOffisForever=true
+                }
+                else{
+                    if(hasSpinnerOpened())
+                        parentLayout.startAnimation(fadeInAnimation)
+                    parentLayout.visibility=View.VISIBLE
+                    hourPicker.visibility=View.VISIBLE
+                    secondPicker.visibility=View.VISIBLE
+                    minutePicker.visibility=View.VISIBLE
+                    shutOffisForever=false
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Do nothing here
+
+            }
+
+        })
+
+    }
+
+    fun hasSpinnerOpened(): Boolean{
+        if(!hasSpinnerOpened){
+            shutOffSpinner.setOnTouchListener { _, event ->
+                if (event.action == MotionEvent.ACTION_UP) {
+                    // Spinner was clicked or opened
+
+                    hasSpinnerOpened = true
+                }
+                false // Return false to allow other touch events to be processed
+            }
+        }
+
+
+        return hasSpinnerOpened
+
+    }
+
+
+
+
+
+    /*There is no way to set importance level of notification channel again to IMPORTANCE_HIGH programmatically after user turns it OFF.
+    Only user can change it via settings. As per docs.
+     "Sets the level of interruption of this notification channel.
+     Only modifiable before the channel is submitted to NotificationManager.createNotificationChannel(NotificationChannel)."*/
     private fun createNotificationChannel(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Create a notification channel
-            val channel = NotificationChannel("alarm_channel", "Alarms", NotificationManager.IMPORTANCE_HIGH)
+            val channel = NotificationChannel("alarm_channel4", "Alarms", NotificationManager.IMPORTANCE_HIGH)
             //channel.enableVibration(true)
             //channel.vibration = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
-
+            channel.importance=NotificationManager.IMPORTANCE_HIGH
             // Get the NotificationManager
             val notificationManager = getSystemService(NotificationManager::class.java)
+            channel.setSound(null, null)
+
             notificationManager.createNotificationChannel(channel)
+
+
         }
 
     }

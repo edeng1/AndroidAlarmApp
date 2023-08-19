@@ -6,6 +6,10 @@
         <item name="android:numbersBackgroundColor">@color/darkish_color</item> <!-- Background color of numbers -->
         <item name="android:numbersSelectorColor">@color/white</item> <!-- Color of the number selector -->
     </style>
+    <style name="CustomNumberPicker">
+        <item name="android:textColor">#FFFFFF</item> <!-- Change to your desired text color -->
+        <!-- You can also customize other attributes here, such as text size, background, etc. -->
+    </style>
     <style name="AppBarCollapsed" parent="@android:style/TextAppearance.Medium">
         <item name="android:textSize">32sp</item>
         <item name="android:alpha">1</item>

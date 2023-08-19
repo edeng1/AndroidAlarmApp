@@ -41,7 +41,7 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
 
         val createTableQuery = "CREATE TABLE IF NOT EXISTS $TABLE_ALARM " +
                 "($COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT, $COLUMN_TIME LONG, $COLUMN_TOGGLE INTEGER, " +
-                "$COLUMN_WEEKDAYS STRING, $COLUMN_LABEL STRING)" //$COLUMN_TONES STRING, $COLUMN_SHUTOFFTIME LONG
+                "$COLUMN_WEEKDAYS STRING, $COLUMN_LABEL STRING, $COLUMN_TONES STRING, $COLUMN_SHUTOFFTIME LONG)" //$COLUMN_TONES STRING, $COLUMN_SHUTOFFTIME LONG
         db.execSQL(createTableQuery)
     }
 
@@ -124,6 +124,25 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
         return Pair("","");
     }
 
+    fun retrieveTonesShutOffTime(alarmId: Int): Pair<String,Long> {
+        val db = this.readableDatabase
+        val cursor = db.query("alarm", null, null, null, null, null, "null")
+
+        with(cursor) {
+            while (moveToNext()) {
+                val _id = getInt(getColumnIndexOrThrow("_id"))
+                val tones=getString(getColumnIndexOrThrow("tones"))
+                val shutOffTime=getLong(getColumnIndexOrThrow("shutofftime"))
+                if(alarmId==_id){
+                    return Pair(tones,shutOffTime)
+                }
+
+            }
+            close()
+        }
+        return Pair("alarm_sound_1",-1L);
+    }
+
 
 
 
@@ -179,6 +198,38 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
 
     }
 
+    fun updateTones(id: Int,tones: String){
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put("_id",id )
+            put("tones",tones)
+
+        }
+        // Define the selection criteria to identify the item you want to update
+        val selection = "_id = ?"
+        val selectionArgs = arrayOf(id.toString()) // Replace "1" with the ID of the item you want to update
+
+        // Update the item in the database
+        db.update("alarm", values, selection, selectionArgs)
+
+    }
+
+    fun updateShutOffTime(id: Int,shutOffTime: Long,){
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put("_id",id )
+            put("shutofftime",shutOffTime)
+
+        }
+        // Define the selection criteria to identify the item you want to update
+        val selection = "_id = ?"
+        val selectionArgs = arrayOf(id.toString()) // Replace "1" with the ID of the item you want to update
+
+        // Update the item in the database
+        db.update("alarm", values, selection, selectionArgs)
+
+    }
+
 
 
 
@@ -196,12 +247,17 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
         return newTime
     }
 
-    // Convert array to string (JSON format in this example)
+    /**Convert array to string (JSON format in this example)
+     * Converts the boolean array of checked day of the week boxes
+     * into string so it can be saved in the database as JSON
+     * */
     fun convertArrayToString(array: Array<Boolean>): String {
         return Gson().toJson(array)
     }
 
-    // Convert string back to array
+    /**Convert JSON string of checked day of week boxes from database
+     * back into Array of Booleans
+     * */
     fun convertStringToArray(arrayString: String): Array<Boolean> {
         return Gson().fromJson(arrayString, Array<Boolean>::class.java)
     }
@@ -212,6 +268,23 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
         val clearDBQuery = "DELETE FROM $TABLE_ALARM"
         db.execSQL(clearDBQuery)
     }
+
+    fun convertHourMinSecToMilliseconds(hour: Int, min: Int, sec: Int): Long {
+
+        val totalMilliseconds = (hour * 3600 + min * 60 + sec) * 1000L
+        return totalMilliseconds
+    }
+
+    fun convertMillisecondsToHoursMinSecs(milliseconds: Long): Triple<Int,Int,Int> {
+        val totalSeconds = milliseconds / 1000
+        val hours = (totalSeconds / 3600).toInt()
+        val minutes = ((totalSeconds % 3600) / 60).toInt()
+        val seconds = (totalSeconds % 60).toInt()
+
+        return Triple(hours,minutes,seconds)
+    }
+
+
     fun deleteTable() {
 
         val db = this.writableDatabase
