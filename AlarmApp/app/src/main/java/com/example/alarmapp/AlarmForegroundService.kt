@@ -35,8 +35,8 @@ class AlarmForegroundService : Service() {
 
         when (intent?.action) {
             "START_ALARM" -> {
-                val NOTIFICATION_ID=intent.getIntExtra("key",1)
 
+                val NOTIFICATION_ID=intent.getIntExtra("key",1)
 
 
 
@@ -50,6 +50,17 @@ class AlarmForegroundService : Service() {
                 stopSelf()
             }
             // Other actions...
+            "SNOOZE_ALARM" -> {
+                snoozeMediaPlayer()
+                val NOTIFICATION_ID=intent.getIntExtra("key",1)
+                val notificationManager = NotificationManagerCompat.from(this)
+
+                notificationManager.cancel(1)
+                startForeground(NOTIFICATION_ID, createNotificationSnooze(NOTIFICATION_ID))
+                // Optionally, stop the service if no other ongoing tasks
+
+            }
+
         }
 
         return START_STICKY
@@ -61,9 +72,11 @@ class AlarmForegroundService : Service() {
 
             val dismissIntent = Intent(this, DismissReceiver::class.java)
             val snoozeIntent = Intent(this, SnoozeReceiver::class.java)
+            Log.d("Not","createNotification $id  ")
+            snoozeIntent.putExtra("key",id)
 
             val dismissPendingIntent = PendingIntent.getBroadcast(this, 0, dismissIntent, PendingIntent.FLAG_IMMUTABLE )
-            val snoozePendingIntent = PendingIntent.getBroadcast(this, 0, snoozeIntent, PendingIntent.FLAG_IMMUTABLE )
+            val snoozePendingIntent = PendingIntent.getBroadcast(this, 0, snoozeIntent, PendingIntent.FLAG_MUTABLE )
 
 
             val notificationBuilder = NotificationCompat.Builder(this, "alarm_channel4")
@@ -72,8 +85,8 @@ class AlarmForegroundService : Service() {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setOngoing(true)
                 .setSound(null)
-                .setContentTitle("AAAA")
-                .setContentText("HaHaHa")
+                .setContentTitle("Alarm")
+                .setContentText("Alarm went off!")
 
 
 
@@ -125,6 +138,72 @@ class AlarmForegroundService : Service() {
             return notificationBuilder.build()
     }
 
+    private fun createNotificationSnooze(id: Int): Notification {
+        val contentView = RemoteViews(packageName, R.layout.notification_layout)
+
+
+        val dismissIntent = Intent(this, DismissReceiver::class.java)
+
+        val dismissPendingIntent = PendingIntent.getBroadcast(this, 0, dismissIntent, PendingIntent.FLAG_IMMUTABLE )
+
+
+
+        val notificationBuilder = NotificationCompat.Builder(this, "alarm_channel4")
+            .setSmallIcon(com.google.android.material.R.drawable.ic_keyboard_black_24dp)
+            .setCustomContentView(contentView) // Set the updated custom layout here
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setOngoing(true)
+            .setSound(null)
+            .setContentTitle("Snooze")
+            .setContentText("Snoozing")
+
+
+
+        notificationBuilder.setSilent(false)
+
+        notificationBuilder.addAction(com.google.android.material.R.drawable.mtrl_ic_cancel, "Dismiss", dismissPendingIntent)
+        val notificationManager = NotificationManagerCompat.from(this)
+
+        Log.d("imp",notificationManager.importance.toString())
+        notificationManager.notify(id, notificationBuilder.build())
+
+        val snoozeTimeMillis: Long = 10000
+        val intervalMillis: Long = 1000
+        val context: Context = this
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP, "MyApp::MyWakelockTag")
+        wakeLock.acquire(snoozeTimeMillis)
+
+        // Start the intent here
+
+            countdownTimer = object : CountDownTimer(snoozeTimeMillis, intervalMillis) {
+                override fun onTick(millisUntilFinished: Long) {
+
+                    val formattedTime=formatMillisecondsToTime(millisUntilFinished)
+                    val remainingTimeSeconds = millisUntilFinished / 1000
+
+                    //contentView.setTextViewText(R.id.notificationTextView, "Time remaining: $remainingTimeSeconds s")
+                    notificationBuilder.setContentText("Snooze time: $formattedTime s")
+                    notificationManager.notify(id, notificationBuilder.build())
+                }
+
+                override fun onFinish() {
+                    val snoozeIntent = Intent(context, AlarmForegroundService::class.java)
+                    snoozeIntent.putExtra("key",id)
+                    snoozeIntent.action = "START_ALARM"
+
+                    context.startService(snoozeIntent)
+
+                }
+            }
+            countdownTimer.start()
+
+
+
+        return notificationBuilder.build()
+    }
+
+
     override fun onDestroy() {
         super.onDestroy()
         if (::mediaPlayer.isInitialized)
@@ -144,12 +223,14 @@ class AlarmForegroundService : Service() {
         val sound=getRawResourceByName(this,toneString)
 
         mediaPlayer = MediaPlayer.create(this, sound)
+        mediaPlayer.setVolume(1f,1f)
         mediaPlayer?.isLooping = true
         mediaPlayer?.start()
     }
 
     fun stopMediaPlayer() {
         if (::mediaPlayer.isInitialized) {
+
             if(mediaPlayer.isPlaying){
                 mediaPlayer.stop()
                 mediaPlayer.release()
@@ -159,6 +240,20 @@ class AlarmForegroundService : Service() {
         if(::countdownTimer.isInitialized)
             countdownTimer.cancel()
     }
+    fun snoozeMediaPlayer() {
+        if (::mediaPlayer.isInitialized) {
+
+            if(mediaPlayer.isPlaying){
+                mediaPlayer.stop()
+            }
+
+        }
+        if(::countdownTimer.isInitialized)
+            countdownTimer.cancel()
+    }
+
+
+
 
     fun formatMillisecondsToTime(milliseconds: Long): String {
         val totalSeconds = milliseconds / 1000

@@ -53,6 +53,8 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
         val alarmRemove: ImageView=itemView.findViewById(R.id.deleteTime)
         val dayOfWeek: TextView= itemView.findViewById(R.id.daysOfWeekText)
         val alarmLabel: TextView = itemView.findViewById(R.id.labelText);
+
+
         init {
             itemView.setOnClickListener(this)
 
@@ -63,17 +65,20 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
 
         override fun onClick(view: View) { //click on alarm
             // Handle the click event for the individual item here
-            val position = adapterPosition
-            // Perform actions based on the clicked item's position or data
-            // Start a new activity when an item is clicked
-            val context = view.context
-            val intent = Intent(context, AlarmEditor::class.java)
-            // Pass any data you want to the new activity using putExtra()
-            // For example:
-            // intent.putExtra("itemPosition", position)
+            if(alarmRemove.visibility==View.INVISIBLE){
+                val position = adapterPosition
+                // Perform actions based on the clicked item's position or data
+                // Start a new activity when an item is clicked
+                val context = view.context
+                val intent = Intent(context, AlarmEditor::class.java)
+                // Pass any data you want to the new activity using putExtra()
+                // For example:
+                // intent.putExtra("itemPosition", position)
 
-            intent.putExtra("key", DataHolder.getInstance().hashMap[adapterPosition])
-            context.startActivity(intent)
+                intent.putExtra("key", DataHolder.getInstance().hashMap[adapterPosition])
+                context.startActivity(intent)
+            }
+
         }
 
         fun bind(item: AlarmItemModel, onRemoveClickListener: OnRemoveClickListener, context: Context) {
@@ -90,6 +95,7 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     onRemoveClickListener.onRemoveClick(position)
+
                 }
             }
 
@@ -205,6 +211,7 @@ class MyAdapter(private val items: ArrayList<AlarmItemModel>,private val context
         holder.bind(item, object : OnRemoveClickListener {
             override fun onRemoveClick(position: Int) {
                 removeItem(position)
+
             }
 
         }, context)

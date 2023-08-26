@@ -5,26 +5,27 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.Color
+import android.graphics.fonts.FontStyle
+import android.graphics.fonts.FontStyle.FONT_SLANT_ITALIC
+import android.graphics.fonts.FontStyle.FONT_WEIGHT_BOLD
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
-import android.widget.ImageButton
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import java.text.SimpleDateFormat
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageButton
 import android.widget.TextView
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.CollapsingToolbarLayout
-import java.lang.Long.MAX_VALUE
+import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 import java.util.concurrent.TimeUnit
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var addAlarm: ImageButton
@@ -191,9 +192,15 @@ class MainActivity : AppCompatActivity() {
 
         timer = Timer()
         timer?.scheduleAtFixedRate(object : TimerTask() {
+            @RequiresApi(Build.VERSION_CODES.Q)
             override fun run() {
                 // Update the time difference for each item in the list
                 var lowestTimeDiff=Long.MAX_VALUE
+                handler.post{
+                    if(alarmList.isEmpty()){
+                        nextAlarmText.text="No alarms Set"
+                    }
+                }
 
                 for (item in alarmList) {
                     val(toggle,time)=alarmHelper.retrieveData(item.alarmId)

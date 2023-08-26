@@ -118,6 +118,7 @@ class AlarmEditor : AppCompatActivity() {
             //Set check boxes as checked boxes that are stored in the db
             if(weekDays!=null || weekDays!= ""){
 
+
                 checkedBoxes=alarmHelper.convertStringToArray(weekDays)
 
                 for((index,cb) in checkBoxes.withIndex()){
@@ -341,14 +342,14 @@ class AlarmEditor : AppCompatActivity() {
     fun setUpShutoffPickers(){
 
         hourPicker.minValue=0
-        hourPicker.maxValue=60
+        hourPicker.maxValue=99
         hourPicker.setFormatter(NumberPicker.Formatter { i -> String.format("%02d", i) })//2 digit values onlyjkl/
         minutePicker.minValue=0
-        minutePicker.maxValue=60
+        minutePicker.maxValue=59
         minutePicker.setFormatter(NumberPicker.Formatter { i -> String.format("%02d", i) })//2 digit values onlyjkl/
 
         secondPicker.minValue=0
-        secondPicker.maxValue=60
+        secondPicker.maxValue=59
 
         minutePicker.value=3
         secondPicker.setFormatter(NumberPicker.Formatter { i -> String.format("%02d", i) })//2 digit values onlyjkl/

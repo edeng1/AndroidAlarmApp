@@ -48,16 +48,17 @@
 
     <TextView
         android:id="@+id/nextAlarmTime"
-        android:layout_width="205dp"
+        android:layout_width="235dp"
         android:layout_height="wrap_content"
 
         android:layout_marginTop="100dp"
         android:textColor="@color/white"
         android:alpha="1.0"
         android:gravity="center"
-        android:textSize="24dp"
+        android:textSize="28dp"
+
         android:textStyle="bold"
-        android:text="Your fading text goes here"
+        android:text="No alarms Set"
         app:layout_anchor="@id/appBarLayout"
         app:layout_anchorGravity="center_horizontal"
         app:layout_behavior=".FadeAwayBehavior"

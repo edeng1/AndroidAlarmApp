@@ -3,7 +3,10 @@
     <string-array name="tones">
         <item>alarm_sound_1</item>
         <item>alarm_sound_2</item>
-        <item>Tone 3</item>
+        <item>classic_alarm</item>
+        <item>short_alarm</item>
+        <item>buzzer</item>
+        <item>retro_game</item>
     </string-array>
     <string-array name="shutoff_time">
         <item>Forever</item>
