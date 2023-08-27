@@ -3,6 +3,7 @@ package com.example.alarmapp
 class DataHolder private constructor() {
     var data: String = ""
     var hashMap= HashMap<Int,Int>()
+    var isAlarmPlaying=false
     companion object {
         @Volatile
         private var instance: DataHolder? = null

@@ -17,6 +17,7 @@ import java.util.*
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         // Perform the desired action when the alarm goes off
+
         Toast.makeText(context, "Alarm went off!", Toast.LENGTH_SHORT).show()
         val i=Intent(context,MainActivity::class.java)
         intent!!.flags=Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -37,7 +38,8 @@ class AlarmReceiver : BroadcastReceiver() {
         // Display the notification
         //notificationManager.notify(0, builder.build())
 
-        if (intent.action == "ALARM_SET") {
+        if (intent.action == "ALARM_SET"&&!DataHolder.getInstance().isAlarmPlaying) {
+
             val serviceIntent = Intent(context, AlarmForegroundService::class.java)
             serviceIntent.action = "START_ALARM"
             val id=intent.getIntExtra("key",-1)

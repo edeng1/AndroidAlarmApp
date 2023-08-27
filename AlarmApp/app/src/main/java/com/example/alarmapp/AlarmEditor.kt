@@ -287,7 +287,8 @@ class AlarmEditor : AppCompatActivity() {
                 intent.putExtra("shutoff",shutOffTimeLong)
                 intent.action = "ALARM_SET"
                 val pendingIntent = PendingIntent.getBroadcast(this, id, intent, FLAG_IMMUTABLE)
-                val am=AlarmManagerHelper.getInstance(this).setAlarm(id,calendar.timeInMillis,pendingIntent,"")
+                val am=AlarmManagerHelper.getInstance(this)
+                am.setAlarm(id,calendar.timeInMillis,pendingIntent,"")
             }
 
             val intent2 = Intent(this, MainActivity::class.java)

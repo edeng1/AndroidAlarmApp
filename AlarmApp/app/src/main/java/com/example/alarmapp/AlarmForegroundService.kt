@@ -38,8 +38,8 @@ class AlarmForegroundService : Service() {
 
                 val NOTIFICATION_ID=intent.getIntExtra("key",1)
 
-
-
+                //isAlarmPlaying needed so multiple alarms dont play at once
+                DataHolder.getInstance().isAlarmPlaying=true
                 val shutOffTime= intent.getLongExtra("shutoff",5000L)
                 startForeground(NOTIFICATION_ID, createNotification(NOTIFICATION_ID,shutOffTime))
                 startMediaPlayer(NOTIFICATION_ID)
@@ -47,6 +47,7 @@ class AlarmForegroundService : Service() {
             "STOP_ALARM" -> {
                 stopMediaPlayer()
                 // Optionally, stop the service if no other ongoing tasks
+                DataHolder.getInstance().isAlarmPlaying=false
                 stopSelf()
             }
             // Other actions...
@@ -54,7 +55,7 @@ class AlarmForegroundService : Service() {
                 snoozeMediaPlayer()
                 val NOTIFICATION_ID=intent.getIntExtra("key",1)
                 val notificationManager = NotificationManagerCompat.from(this)
-
+                    //DataHolder.getInstance().isAlarmPlaying=false
                 notificationManager.cancel(1)
                 startForeground(NOTIFICATION_ID, createNotificationSnooze(NOTIFICATION_ID))
                 // Optionally, stop the service if no other ongoing tasks
@@ -76,7 +77,7 @@ class AlarmForegroundService : Service() {
             snoozeIntent.putExtra("key",id)
 
             val dismissPendingIntent = PendingIntent.getBroadcast(this, 0, dismissIntent, PendingIntent.FLAG_IMMUTABLE )
-            val snoozePendingIntent = PendingIntent.getBroadcast(this, 0, snoozeIntent, PendingIntent.FLAG_MUTABLE )
+            val snoozePendingIntent = PendingIntent.getBroadcast(this, 0, snoozeIntent, PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
 
             val notificationBuilder = NotificationCompat.Builder(this, "alarm_channel4")
@@ -123,6 +124,7 @@ class AlarmForegroundService : Service() {
                 }
 
                 override fun onFinish() {
+                    DataHolder.getInstance().isAlarmPlaying=false
                     mediaPlayer.stop()
                     mediaPlayer.release()
                     wakeLock.release() // Release the wakelock after the intent is started

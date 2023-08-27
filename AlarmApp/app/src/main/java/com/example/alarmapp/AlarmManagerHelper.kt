@@ -3,7 +3,9 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
+import androidx.core.content.ContextCompat.getSystemService
 import com.example.alarmapp.AlarmDatabaseHelper
 import java.text.SimpleDateFormat
 import java.util.*
@@ -31,29 +33,48 @@ class AlarmManagerHelper private constructor(private val context: Context) {
         var newTime = db.updateData(alarmId,triggerTime,1)
 
         //If there are checked boxes for days of week
-        val (weekdays,label)=db.retrieveWeekDaysLabel(alarmId)
-        var checkedBoxes:Array<Boolean>
-        if(weekdays!="" || weekdays!=null){
-           checkedBoxes = db.convertStringToArray(weekdays)
-            if(!allDaysOfWeekOff(checkedBoxes)){
-                newTime=dayOfWeekInMillis(checkedBoxes,newTime)
-            }
-        }
+        //        val (weekdays,label)=db.retrieveWeekDaysLabel(alarmId)
+    //        var checkedBoxes:Array<Boolean>
+    //        if(weekdays!="" || weekdays!=null){
+    //            checkedBoxes = db.convertStringToArray(weekdays)
+    //            if(!allDaysOfWeekOff(checkedBoxes)){
+    //                newTime=dayOfWeekInMillis(checkedBoxes,newTime)
+    //            }
+    //        }
 
-        getAlarmManager()?.let { am ->
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, newTime, pendingIntent)
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                am.setExact(AlarmManager.RTC_WAKEUP, newTime, pendingIntent)
-            } else {
-                am.set(AlarmManager.RTC_WAKEUP, newTime, pendingIntent)
+        //checks for duplicate so only one alarm is set at same time
+
+            getAlarmManager()?.let { am ->
+
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    //am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, newTime, pendingIntent)
+                    alarmManager?.setAlarmClock(
+                        AlarmManager.AlarmClockInfo(newTime, pendingIntent),
+                        pendingIntent
+                    )
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    //am.setExact(AlarmManager.RTC_WAKEUP, newTime, pendingIntent)
+                    alarmManager?.setAlarmClock(
+                        AlarmManager.AlarmClockInfo(newTime, pendingIntent),
+                        pendingIntent
+                    )
+                } else {
+                    //am.set(AlarmManager.RTC_WAKEUP, newTime, pendingIntent)
+                    alarmManager?.setAlarmClock(
+                        AlarmManager.AlarmClockInfo(newTime, pendingIntent),
+                        pendingIntent
+                    )
+                }
+                val calendar = Calendar.getInstance()
+                calendar.timeInMillis = newTime
+                val hour = Calendar.HOUR_OF_DAY
+                val min = Calendar.MINUTE
+                Toast.makeText(context, "Alarm set! $timeString", Toast.LENGTH_SHORT).show()
             }
-            val calendar = Calendar.getInstance()
-            calendar.timeInMillis=newTime
-            val hour=Calendar.HOUR_OF_DAY
-            val min=Calendar.MINUTE
-            Toast.makeText(context, "Alarm set! $timeString", Toast.LENGTH_SHORT).show()
-        }
+
+
+
     }
 
 
@@ -136,6 +157,8 @@ class AlarmManagerHelper private constructor(private val context: Context) {
         // Format the Date object to the desired date/time format
         return simpleDateFormat.format(date)
     }
+
+
 
 
 

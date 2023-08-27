@@ -229,9 +229,45 @@ class AlarmDatabaseHelper private constructor(context: Context) : SQLiteOpenHelp
         db.update("alarm", values, selection, selectionArgs)
 
     }
+/**
+ * Used to check if there are more than one set alarms so
+ * only one alarm can be set at a time.
+ * */
+    fun containsDuplicateSetAlarm(time: Long):Boolean{
+        val timeInMillisList = ArrayList<Long>()
+        val db = this.readableDatabase
+
+        val projection = arrayOf(COLUMN_TIME) // The column you want to retrieve
+        val cursor = db.query(
+            TABLE_ALARM , // Replace with your table name
+            projection,
+            null,
+            null,
+            null,
+            null,
+            null
+        )
+
+// Iterate through the cursor to retrieve values and add them to the ArrayList
+        while (cursor.moveToNext()) {
+            if(timeInMillisList.contains(time)){
+                return true
+            }
+            val timeInMillis = cursor.getLong(cursor.getColumnIndexOrThrow("time"))
+            timeInMillisList.add(timeInMillis)
+        }
+
+// Close the cursor
+        cursor.close()
+
+        return false
+    }
 
 
-
+    /**
+     *Checks if set time is before current time and adds
+     * a day to bring it up to current time
+     * Called in updateData*/
 
     fun isTimeBeforeCurrentTime(time: Long): Long{
         val calendar = Calendar.getInstance()
