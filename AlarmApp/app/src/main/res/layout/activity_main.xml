@@ -17,7 +17,7 @@
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:layout_width="match_parent"
             android:id="@+id/collapsingBarLayout"
-            android:layout_height="300dp"
+            android:layout_height="600dp"
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
             android:background="@color/darkish_color"
             >
@@ -40,6 +40,13 @@
 
                 />
 
+            <com.google.android.ads.nativetemplates.TemplateView
+                android:id="@+id/nativeAdTemplate"
+                android:layout_marginTop="100dp"
+                app:gnt_template_type="@layout/gnt_medium_template_view"
+                android:layout_gravity="center"
+                android:layout_width="350dp"
+                android:layout_height="match_parent" />
 
 
 
@@ -51,7 +58,7 @@
         android:layout_width="235dp"
         android:layout_height="wrap_content"
 
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="50dp"
         android:textColor="@color/white"
         android:alpha="1.0"
         android:gravity="center"
@@ -66,6 +73,9 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+
+
 
 
     <androidx.recyclerview.widget.RecyclerView

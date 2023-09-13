@@ -5,15 +5,16 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.fonts.FontStyle
-import android.graphics.fonts.FontStyle.FONT_SLANT_ITALIC
-import android.graphics.fonts.FontStyle.FONT_WEIGHT_BOLD
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.animation.AlphaAnimation
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.annotation.RequiresApi
@@ -21,6 +22,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.ads.nativetemplates.NativeTemplateStyle
+import com.google.android.ads.nativetemplates.TemplateView
+import com.google.android.gms.ads.*
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener
+import com.google.android.gms.ads.nativead.NativeAd
+import com.google.android.gms.ads.nativead.NativeAdOptions
+import com.google.android.gms.ads.nativead.NativeAdView
+import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import java.text.SimpleDateFormat
 import java.util.*
@@ -28,6 +37,8 @@ import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var adLoader: AdLoader
+    private lateinit var nativeAdTemplate: TemplateView
     private lateinit var addAlarm: ImageButton
     private lateinit var removeAlarm: ImageButton
     private lateinit var nextAlarmText: TextView
@@ -39,12 +50,14 @@ class MainActivity : AppCompatActivity() {
     private var toggleVisible=View.VISIBLE
     private var removeVisible=View.INVISIBLE
     private var timer: Timer? = null
+    private var adsLoaded: Boolean = false
     private lateinit var alarmHelper: AlarmDatabaseHelper
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        loadNativeAds()
         //addAlarm=findViewById(R.id.addAlarm);
         //removeAlarm=findViewById(R.id.removeAlarm);
         nextAlarmText=findViewById(R.id.nextAlarmTime)
@@ -78,6 +91,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         startTimer()
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -261,6 +275,60 @@ class MainActivity : AppCompatActivity() {
         return timeDifference
     }
 
+ fun loadNativeAds(){
 
+
+
+     MobileAds.initialize(this) {}
+        //Test ca-app-pub-3940256099942544/2247696110
+        //"ca-app-pub-1844708831767128/8013719447" appid
+        //Real adUnitId ca-app-pub-3940256099942544/2247696110
+     adLoader = AdLoader.Builder(this, "ca-app-pub-3940256099942544/2247696110")
+         .forNativeAd { ad : NativeAd ->
+             // Show the ad.
+             if (!adLoader.isLoading) {
+                 Log.d("ad", "Ad loaded")
+             }
+
+             if (isDestroyed) {
+                 ad.destroy()
+                 return@forNativeAd
+             }
+             val styles = NativeTemplateStyle.Builder().withMainBackgroundColor(ColorDrawable(Color.BLACK)).build()
+             nativeAdTemplate = findViewById<TemplateView>(R.id.nativeAdTemplate)
+             nativeAdTemplate.setStyles(styles)
+             nativeAdTemplate.setNativeAd(ad)
+             adsLoaded=true
+
+         }
+         .withAdListener(object : AdListener() {
+             override fun onAdFailedToLoad(adError: LoadAdError) {
+                 // Handle the failure by logging, altering the UI, and so on.
+                 Log.d("ad", adError.toString())
+             }
+         })
+         .withNativeAdOptions(
+             NativeAdOptions.Builder()
+             // Methods in the NativeAdOptions.Builder class can be
+             // used here to specify individual options settings.
+             .build())
+         .build()
+
+// Load the ad
+     adLoader.loadAd(AdRequest.Builder().build())
+ }
+    fun collapsedToolbar(){
+        val fadeInAnimation = AlphaAnimation(0f, 1f)
+        fadeInAnimation.duration = 1000 // Adjust the duration as needed
+        val appBarLayout = findViewById<AppBarLayout>(R.id.appBarLayout)
+        appBarLayout.addOnOffsetChangedListener(AppBarLayout.OnOffsetChangedListener { _, verticalOffset ->
+            // Calculate the percentage of collapse (0 when fully expanded, 1 when fully collapsed)
+            val percentage = Math.abs(verticalOffset.toFloat()) / appBarLayout.totalScrollRange.toFloat()
+
+            // Adjust the alpha value of the ImageView based on the collapse percentage
+            if(adsLoaded)
+                nativeAdTemplate.alpha = percentage
+        })
+    }
 
 }
