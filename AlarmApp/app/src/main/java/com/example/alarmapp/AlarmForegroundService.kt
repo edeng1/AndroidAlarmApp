@@ -12,9 +12,6 @@ import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import java.io.InputStream
-import java.text.SimpleDateFormat
-import java.util.*
 
 
 class AlarmForegroundService : Service() {
@@ -47,11 +44,12 @@ class AlarmForegroundService : Service() {
             "STOP_ALARM" -> {
                 stopMediaPlayer()
                 // Optionally, stop the service if no other ongoing tasks
-                DataHolder.getInstance().isAlarmPlaying=false
+
                 stopSelf()
             }
             // Other actions...
             "SNOOZE_ALARM" -> {
+
                 snoozeMediaPlayer()
                 val NOTIFICATION_ID=intent.getIntExtra("key",1)
                 val notificationManager = NotificationManagerCompat.from(this)
@@ -80,15 +78,64 @@ class AlarmForegroundService : Service() {
             val snoozePendingIntent = PendingIntent.getBroadcast(this, 0, snoozeIntent, PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
 
+
+            contentView.setOnClickPendingIntent(R.id.dismissButton, dismissPendingIntent)
+            contentView.setOnClickPendingIntent(R.id.snoozeButton, snoozePendingIntent)
+
+
+        val(tones,shutofftime) = db.retrieveTonesShutOffTime(id)
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        val wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP, "MyApp::MyWakelockTag")
+        wakeLock.acquire(shutofftime)
+
+        val fullScreenIntent= Intent(this, FullScreenNotification::class.java)
+        fullScreenIntent.putExtra("key", id) // Set any extras if needed
+        fullScreenIntent.putExtra("shutofftime", shutofftime)
+        //fullScreenIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val fullScreenPendingIntent = PendingIntent.getActivity(this,
+            id+1,  // Use a unique request code
+            fullScreenIntent,
+            PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT // Use this flag to update the intent if it already exists
+        )
+
+
+        val intent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(this,
+            id+1,  // Use a unique request code
+            intent,
+            PendingIntent.FLAG_IMMUTABLE // Use this flag to update the intent if it already exists
+        )
             val notificationBuilder = NotificationCompat.Builder(this, "alarm_channel4")
                 .setSmallIcon(com.google.android.material.R.drawable.ic_keyboard_black_24dp)
-                .setCustomContentView(contentView) // Set the updated custom layout here
+                //.setCustomContentView(contentView)// Set the updated custom layout here
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setOngoing(true)
                 .setSound(null)
-                .setContentTitle("Alarm")
+                .setVibrate(
+            longArrayOf(
+                500,
+                500,
+                500,
+                500,
+                500,
+                500,
+                500,
+                500,
+                500,
+                500,
+                500,
+                500,
+                500,
+                500
+            )
+        )   .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            .setContentTitle("Alarm")
                 .setContentText("Alarm went off!")
+                .setContentIntent(pendingIntent)
+                .setFullScreenIntent(fullScreenPendingIntent,true)
 
+            notificationBuilder.setContentIntent(fullScreenPendingIntent)
+            //notificationBuilder.setFullScreenIntent(fullScreenPendingIntent,true)
 
 
             notificationBuilder.setSilent(false)
@@ -99,14 +146,12 @@ class AlarmForegroundService : Service() {
 
         Log.d("imp",notificationManager.importance.toString())
             notificationManager.notify(id, notificationBuilder.build())
-           val(tones,shutofftime) = db.retrieveTonesShutOffTime(id)
+
             toneString=tones
             val totalTimeMillis: Long = 5000
             val intervalMillis: Long = 1000
 
-        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        val wakeLock = powerManager.newWakeLock(PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP, "MyApp::MyWakelockTag")
-        wakeLock.acquire(shutofftime)
+
 
         // Start the intent here
 
@@ -154,6 +199,7 @@ class AlarmForegroundService : Service() {
             .setSmallIcon(com.google.android.material.R.drawable.ic_keyboard_black_24dp)
             .setCustomContentView(contentView) // Set the updated custom layout here
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)//Does not show heads-up noti on lockscreen
             .setOngoing(true)
             .setSound(null)
             .setContentTitle("Snooze")
@@ -194,6 +240,7 @@ class AlarmForegroundService : Service() {
                     snoozeIntent.putExtra("key",id)
                     snoozeIntent.action = "START_ALARM"
 
+
                     context.startService(snoozeIntent)
 
                 }
@@ -231,24 +278,32 @@ class AlarmForegroundService : Service() {
     }
 
     fun stopMediaPlayer() {
-        if (::mediaPlayer.isInitialized) {
+        if(DataHolder.getInstance().isAlarmPlaying){
+            DataHolder.getInstance().isAlarmPlaying=false
+            if (::mediaPlayer.isInitialized) {
 
-            if(mediaPlayer.isPlaying){
-                mediaPlayer.stop()
-                mediaPlayer.release()
+                if(mediaPlayer.isPlaying){
+                    mediaPlayer.stop()
+                    mediaPlayer.release()
+                }
+
             }
-
         }
+
         if(::countdownTimer.isInitialized)
             countdownTimer.cancel()
     }
     fun snoozeMediaPlayer() {
-        if (::mediaPlayer.isInitialized) {
+        if(DataHolder.getInstance().isAlarmPlaying) {
+            DataHolder.getInstance().isAlarmPlaying=false
+            if (::mediaPlayer.isInitialized) {
 
-            if(mediaPlayer.isPlaying){
-                mediaPlayer.stop()
+                if (mediaPlayer.isPlaying) {
+                    mediaPlayer.stop()
+                    mediaPlayer.release()
+                }
+
             }
-
         }
         if(::countdownTimer.isInitialized)
             countdownTimer.cancel()

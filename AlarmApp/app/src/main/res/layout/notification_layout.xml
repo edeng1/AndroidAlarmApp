@@ -3,19 +3,71 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/darkish_color"
     android:padding="10dp">
 
     <TextView
         android:id="@+id/notificationTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Alarm is ringing! \nTime remaining: 00:12"
+        android:text="Alarm is ringing!"
         android:layout_gravity="center"
         android:textAlignment="center"
-        android:textSize="12sp"
+        android:textColor="@color/white"
+        android:textSize="24sp"
         android:textStyle="bold"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@color/black"
+        android:layout_marginTop="10dp"
+
+        >
+    <TextView
+
+        android:id="@+id/dateTextView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Friday,Sept 4"
+        android:layout_gravity="center"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+    <TextView
+
+        android:id="@+id/clockTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="11:00 am"
+        android:layout_gravity="center"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="48sp"
+        android:textStyle="bold"/>
+</LinearLayout>
+    <Button
+        android:id="@+id/snoozeButton"
+        android:layout_width="265dp"
+        android:layout_height="65dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="130dp"
+        android:text="Snooze"/>
+
+    <Button
+
+        android:id="@+id/dismissButton"
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:layout_gravity="center"
+
+        android:layout_marginTop="150dp"
+        android:text="Dismiss"/>
+
+
 
 
 
