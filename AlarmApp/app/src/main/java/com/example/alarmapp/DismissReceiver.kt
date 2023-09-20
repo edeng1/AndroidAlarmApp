@@ -14,8 +14,8 @@ class DismissReceiver : BroadcastReceiver() {
         context.startService(stopIntent)
 
         val notificationManager = NotificationManagerCompat.from(context)
-
-        notificationManager.cancel(1)
+        val id =intent.getIntExtra("key",2)
+        notificationManager.cancel(id)
     }
 }
 

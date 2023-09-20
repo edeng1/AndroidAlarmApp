@@ -244,10 +244,10 @@ class MainActivity : AppCompatActivity() {
                                 TimeUnit.MILLISECONDS.toSeconds(lowestTimeDiff) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(lowestTimeDiff)));
 
 
-                            nextAlarmText.text="Next alarm in $timeInHMS"
+                            nextAlarmText.text="Next Alarm in $timeInHMS"
                         }
                         else{
-                            nextAlarmText.text="All alarms off"
+                            nextAlarmText.text="All Alarms off"
                         }
                     }
                 }

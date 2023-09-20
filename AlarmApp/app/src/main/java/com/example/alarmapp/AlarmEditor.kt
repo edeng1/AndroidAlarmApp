@@ -1,10 +1,7 @@
 package com.example.alarmapp
 
 import AlarmManagerHelper
-import android.app.AlarmManager
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.*
 import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.content.ContentValues
 import android.content.Context
@@ -430,8 +427,9 @@ class AlarmEditor : AppCompatActivity() {
     private fun createNotificationChannel(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Create a notification channel
-            val channel = NotificationChannel("alarm_channel4", "Alarms", NotificationManager.IMPORTANCE_HIGH)
+            val channel = NotificationChannel("alarm_channel5", "Alarms", NotificationManager.IMPORTANCE_HIGH)
             //channel.enableVibration(true)
+            channel.setLockscreenVisibility(Notification.VISIBILITY_SECRET);
             //channel.vibration = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
             channel.importance=NotificationManager.IMPORTANCE_HIGH
             // Get the NotificationManager

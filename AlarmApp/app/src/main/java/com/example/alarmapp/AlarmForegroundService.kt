@@ -3,13 +3,14 @@ import AlarmManagerHelper
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_MULTIPLE_TASK
+import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
 import android.content.res.Resources
 import android.media.MediaPlayer
 import android.os.CountDownTimer
 import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
-import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 
@@ -44,7 +45,8 @@ class AlarmForegroundService : Service() {
             "STOP_ALARM" -> {
                 stopMediaPlayer()
                 // Optionally, stop the service if no other ongoing tasks
-
+                //val notificationManager = NotificationManagerCompat.from(this)
+                //notificationManager.cancel(1)
                 stopSelf()
             }
             // Other actions...
@@ -66,7 +68,7 @@ class AlarmForegroundService : Service() {
     }
 
     private fun createNotification(id: Int,shutOffTime: Long): Notification {
-            val contentView = RemoteViews(packageName, R.layout.notification_layout)
+            //val contentView = RemoteViews(packageName, R.layout.notification_layout)
 
 
             val dismissIntent = Intent(this, DismissReceiver::class.java)
@@ -79,8 +81,8 @@ class AlarmForegroundService : Service() {
 
 
 
-            contentView.setOnClickPendingIntent(R.id.dismissButton, dismissPendingIntent)
-            contentView.setOnClickPendingIntent(R.id.snoozeButton, snoozePendingIntent)
+           // contentView.setOnClickPendingIntent(R.id.dismissButton, dismissPendingIntent)
+            //contentView.setOnClickPendingIntent(R.id.snoozeButton, snoozePendingIntent)
 
 
         val(tones,shutofftime) = db.retrieveTonesShutOffTime(id)
@@ -91,10 +93,13 @@ class AlarmForegroundService : Service() {
         val fullScreenIntent= Intent(this, FullScreenNotification::class.java)
         fullScreenIntent.putExtra("key", id) // Set any extras if needed
         fullScreenIntent.putExtra("shutofftime", shutofftime)
-        //fullScreenIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        //fullScreenIntent.flags=Intent.FLAG_ACTIVITY_SINGLE_TOP
+
         val fullScreenPendingIntent = PendingIntent.getActivity(this,
             id+1,  // Use a unique request code
             fullScreenIntent,
+
             PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT // Use this flag to update the intent if it already exists
         )
 
@@ -105,7 +110,7 @@ class AlarmForegroundService : Service() {
             intent,
             PendingIntent.FLAG_IMMUTABLE // Use this flag to update the intent if it already exists
         )
-            val notificationBuilder = NotificationCompat.Builder(this, "alarm_channel4")
+            val notificationBuilder = NotificationCompat.Builder(this, "alarm_channel5")
                 .setSmallIcon(com.google.android.material.R.drawable.ic_keyboard_black_24dp)
                 //.setCustomContentView(contentView)// Set the updated custom layout here
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -133,9 +138,11 @@ class AlarmForegroundService : Service() {
                 .setContentText("Alarm went off!")
                 .setContentIntent(pendingIntent)
                 .setFullScreenIntent(fullScreenPendingIntent,true)
+                .setAutoCancel(true)
 
-            notificationBuilder.setContentIntent(fullScreenPendingIntent)
+            //notificationBuilder.setContentIntent(fullScreenPendingIntent)
             //notificationBuilder.setFullScreenIntent(fullScreenPendingIntent,true)
+            notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_SECRET)
 
 
             notificationBuilder.setSilent(false)
@@ -173,7 +180,7 @@ class AlarmForegroundService : Service() {
                     mediaPlayer.stop()
                     mediaPlayer.release()
                     wakeLock.release() // Release the wakelock after the intent is started
-                    contentView.setTextViewText(R.id.notificationTextView, "Time's up!")
+                    //contentView.setTextViewText(R.id.notificationTextView, "Time's up!")
                     notificationManager.notify(id, notificationBuilder.build())
 
                 }
@@ -186,7 +193,7 @@ class AlarmForegroundService : Service() {
     }
 
     private fun createNotificationSnooze(id: Int): Notification {
-        val contentView = RemoteViews(packageName, R.layout.notification_layout)
+        //val contentView = RemoteViews(packageName, R.layout.notification_layout)
 
 
         val dismissIntent = Intent(this, DismissReceiver::class.java)
@@ -195,9 +202,9 @@ class AlarmForegroundService : Service() {
 
 
 
-        val notificationBuilder = NotificationCompat.Builder(this, "alarm_channel4")
+        val notificationBuilder = NotificationCompat.Builder(this, "alarm_channel5")
             .setSmallIcon(com.google.android.material.R.drawable.ic_keyboard_black_24dp)
-            .setCustomContentView(contentView) // Set the updated custom layout here
+            //.setCustomContentView(contentView) // Set the updated custom layout here
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setVisibility(NotificationCompat.VISIBILITY_SECRET)//Does not show heads-up noti on lockscreen
             .setOngoing(true)
@@ -208,7 +215,7 @@ class AlarmForegroundService : Service() {
 
 
         notificationBuilder.setSilent(false)
-
+        notificationBuilder.setVisibility(NotificationCompat.VISIBILITY_SECRET)
         notificationBuilder.addAction(com.google.android.material.R.drawable.mtrl_ic_cancel, "Dismiss", dismissPendingIntent)
         val notificationManager = NotificationManagerCompat.from(this)
 

@@ -11,6 +11,7 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.ads.*
 import org.w3c.dom.Text
 import java.text.SimpleDateFormat
 import java.util.*
@@ -20,10 +21,13 @@ class FullScreenNotification : AppCompatActivity() {
     private lateinit var timeRemainingTextView: TextView
     private lateinit var dateTextView: TextView
     private lateinit var clockTextView: TextView
-
-
+    private lateinit var buttonDismiss: Button
+    private lateinit var buttonSnooze: Button
+    lateinit var mAdView : AdView
+    lateinit var mAdView2 : AdView
+    lateinit var mAdView3 : AdView
     override fun onCreate(savedInstanceState: Bundle?) {
-
+        Log.d("hey","hey")
         super.onCreate(savedInstanceState)
         showWhenLockedAndTurnScreenOn()
         setContentView(R.layout.notification_layout)
@@ -32,8 +36,9 @@ class FullScreenNotification : AppCompatActivity() {
         clockTextView=findViewById(R.id.clockTextView)
         timeRemainingTextView=findViewById(R.id.notificationTextView)
         timeTillDismiss()
-        val buttonDismiss = findViewById<Button>(R.id.dismissButton)
-        val buttonSnooze = findViewById<Button>(R.id.snoozeButton)
+
+        buttonDismiss = findViewById<Button>(R.id.dismissButton)
+        buttonSnooze = findViewById<Button>(R.id.snoozeButton)
 
         buttonDismiss.setOnClickListener(View.OnClickListener {
             val dismissIntent = Intent(this, DismissReceiver::class.java)
@@ -47,6 +52,8 @@ class FullScreenNotification : AppCompatActivity() {
                 e.printStackTrace()
             }
             finish() // Close the activity
+            //val mainIntent = Intent(this, MainActivity::class.java)
+            //startActivity(mainIntent)
         })
 
         buttonSnooze.setOnClickListener(View.OnClickListener {
@@ -103,6 +110,8 @@ class FullScreenNotification : AppCompatActivity() {
 
              // Close the activity
         })
+
+        loadBannerAds()
     }
 
     private fun timeTillDismiss() {
@@ -134,6 +143,8 @@ class FullScreenNotification : AppCompatActivity() {
 
                     if(isShutOffTime)
                         timeRemainingTextView.text="Dismissing in "+formattedTime.toString()
+                    else
+                        timeRemainingTextView.text="Alarm is ringing!"
 
                 }
 
@@ -146,6 +157,36 @@ class FullScreenNotification : AppCompatActivity() {
             }
             countdownTimer.start()
         }
+
+    fun loadBannerAds(){
+        //ca-app-pub-3940256099942544/6300978111
+        MobileAds.initialize(this) {}
+
+        mAdView = findViewById(R.id.adView)
+        //mAdView2 = findViewById(R.id.adView2)
+        mAdView3 = findViewById(R.id.adView3)
+        val adRequest = AdRequest.Builder().build()
+        mAdView.loadAd(adRequest)
+        //mAdView2.loadAd(adRequest)
+        mAdView3.loadAd(adRequest)
+
+        mAdView.adListener = object: AdListener() {
+            override fun onAdClicked() {
+                buttonDismiss.callOnClick()
+            }
+        }
+//        mAdView2.adListener = object: AdListener() {
+//            override fun onAdClicked() {
+//                buttonDismiss.callOnClick()
+//            }
+//        }
+        mAdView3.adListener = object: AdListener() {
+            override fun onAdClicked() {
+                buttonDismiss.callOnClick()
+            }
+        }
+
+    }
 
 
 
